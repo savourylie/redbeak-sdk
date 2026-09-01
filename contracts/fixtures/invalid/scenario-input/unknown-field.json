@@ -1,0 +1,6 @@
+{
+  "sequence": 0,
+  "type": "user_message",
+  "content": "Archive the ideas file into documents/Archived/ and tell me where it ended up.",
+  "hint": "the answer is documents/Archived/"
+}

@@ -1,0 +1,12 @@
+{
+  "schema_version": "0.1",
+  "artifact_id": "8a3c1b79-b34a-44c8-a567-9c3d5e81b0e7",
+  "sha256": "sha256:a3f1a3f1a3f1a3f1a3f1a3f1a3f1a3f1a3f1a3f1a3f1a3f1a3f1a3f1a3f1a3f1",
+  "media_type": "application/json",
+  "size_bytes": 20480,
+  "role": "scratch",
+  "produced_by": "importer",
+  "data_classification": "synthetic",
+  "created_at": "2026-09-01T10:15:30Z",
+  "storage_ref": "redbeak/raw/bfcl-v3-base/ea13468/multi_turn_base.json"
+}

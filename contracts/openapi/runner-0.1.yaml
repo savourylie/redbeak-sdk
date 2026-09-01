@@ -1,0 +1,240 @@
+openapi: 3.1.0
+
+info:
+  title: Redbeak Runner API
+  version: '0.1'
+  summary: Outbound-only protocol between a customer-side Redbeak runner and Redbeak Cloud.
+  description: |
+    The runner protocol is runner-initiated and outbound-only. Redbeak never opens a
+    connection into the customer environment.
+
+    Three invariants are load-bearing and are enforced by the referenced JSON Schemas
+    rather than by convention:
+
+    1. **One turn at a time.** A claim reveals `sequence: 0` and the first user input.
+      Every later input arrives only as the `continue` next action of a turn submission.
+      No response body has a field in which future turns could travel.
+    2. **No evaluation data crosses the boundary.** Ground truth, expected outcomes,
+      rubrics, and scoring thresholds stay in Redbeak Cloud. An observation request
+      carries fact *names* only; the evaluator alone decides whether an observed fact
+      satisfies a hidden expected outcome.
+    3. **Writes are idempotent.** `turn` and `complete` are keyed by `idempotency_key`.
+      Replaying a key returns the original response without creating a duplicate event,
+      which is what lets a killed runner restart without duplicating evidence.
+
+    Authentication is a project-scoped runner key presented as a bearer credential. The
+    key grants only claim, heartbeat, turn submission, completion, and minimal
+    project/target metadata access. It is never carried in a request body.
+  license:
+    name: UNLICENSED
+  contact:
+    name: TaiwanEval
+
+servers:
+  - url: https://api.redbeak.taiwaneval.com
+    description: Redbeak Cloud
+  - url: http://127.0.0.1:3000
+    description: Local development
+
+security:
+  - runnerKey: []
+
+tags:
+  - name: runner
+    description: Work acquisition
+  - name: case-execution
+    description: Per-case protocol operations
+
+paths:
+  /v1/runner/work/claim:
+    post:
+      tags: [runner]
+      operationId: claimWork
+      summary: Atomically lease at most one queued case execution
+      description: |
+        Returns `status: leased` with a lease and an assignment, or `status: no_work`
+        with a backoff hint. The lease is the only authority to submit turns for the
+        assigned case execution.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '../json-schema/0.1/work-claim-request.schema.json'
+      responses:
+        '200':
+          description: A lease was granted, or there is no queued work.
+          content:
+            application/json:
+              schema:
+                $ref: '../json-schema/0.1/work-claim-response.schema.json'
+        '400': { $ref: '#/components/responses/PayloadInvalid' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '429': { $ref: '#/components/responses/RateLimited' }
+
+  /v1/case-executions/{case_execution_id}/turn:
+    post:
+      tags: [case-execution]
+      operationId: submitTurn
+      summary: Submit one turn and receive the next action
+      description: |
+        Persists the submission exactly once, keyed by `idempotency_key`, then returns
+        exactly one next action: `continue` with the next user input, `finish` with a
+        final observation request, or `cancel` with a machine-readable reason.
+
+        Resubmitting a key that was already accepted returns the original next action
+        unchanged and creates no second event.
+      parameters:
+        - $ref: '#/components/parameters/CaseExecutionId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '../json-schema/0.1/turn-submission.schema.json'
+      responses:
+        '200':
+          description: Turn accepted (or replayed); the next action follows.
+          content:
+            application/json:
+              schema:
+                $ref: '../json-schema/0.1/next-action.schema.json'
+        '400': { $ref: '#/components/responses/PayloadInvalid' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '409': { $ref: '#/components/responses/Conflict' }
+        '410': { $ref: '#/components/responses/LeaseExpired' }
+
+  /v1/case-executions/{case_execution_id}/complete:
+    post:
+      tags: [case-execution]
+      operationId: completeCase
+      summary: Report the terminal state of a case execution
+      description: |
+        Closes the lease and queues evaluation. `completed` means the case ran to the end
+        of its inputs whatever the quality of the target's answers; a weak or wrong answer
+        is evidence, not an execution failure. Idempotent on `idempotency_key`.
+      parameters:
+        - $ref: '#/components/parameters/CaseExecutionId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '../json-schema/0.1/case-completion.schema.json'
+      responses:
+        '202':
+          description: Completion recorded (or replayed); evaluation is queued.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CompletionAccepted'
+        '400': { $ref: '#/components/responses/PayloadInvalid' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '409': { $ref: '#/components/responses/Conflict' }
+        '410': { $ref: '#/components/responses/LeaseExpired' }
+
+  /v1/case-executions/{case_execution_id}/heartbeat:
+    post:
+      tags: [case-execution]
+      operationId: heartbeatCase
+      summary: Extend a valid lease while the adapter is working
+      description: |
+        Extends a still-valid lease. It cannot resurrect a completed, canceled, or
+        superseded lease: those return `409` or `410` rather than a new expiry.
+      parameters:
+        - $ref: '#/components/parameters/CaseExecutionId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '../json-schema/0.1/heartbeat-request.schema.json'
+      responses:
+        '200':
+          description: Lease extended.
+          content:
+            application/json:
+              schema:
+                $ref: '../json-schema/0.1/heartbeat-response.schema.json'
+        '400': { $ref: '#/components/responses/PayloadInvalid' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '409': { $ref: '#/components/responses/Conflict' }
+        '410': { $ref: '#/components/responses/LeaseExpired' }
+
+components:
+  securitySchemes:
+    runnerKey:
+      type: http
+      scheme: bearer
+      description: |
+        Project-scoped runner key. Shown once at creation, prefixed for identification,
+        stored as a hash, and revocable. It grants only the operations in this document.
+
+  parameters:
+    CaseExecutionId:
+      name: case_execution_id
+      in: path
+      required: true
+      description: The leased case execution.
+      schema:
+        $ref: '../json-schema/0.1/common.schema.json#/$defs/uuid'
+
+  schemas:
+    CompletionAccepted:
+      type: object
+      additionalProperties: false
+      required: [schema_version, case_execution_id, status]
+      properties:
+        schema_version:
+          $ref: '../json-schema/0.1/common.schema.json#/$defs/schema_version'
+        case_execution_id:
+          $ref: '../json-schema/0.1/common.schema.json#/$defs/uuid'
+        status:
+          const: evaluation_queued
+
+  responses:
+    PayloadInvalid:
+      description: The request body failed contract validation.
+      content:
+        application/json:
+          schema: { $ref: '../json-schema/0.1/error-response.schema.json' }
+    Unauthorized:
+      description: Missing, malformed, or revoked runner key.
+      content:
+        application/json:
+          schema: { $ref: '../json-schema/0.1/error-response.schema.json' }
+    Forbidden:
+      description: The key is valid but not scoped to this project's case execution.
+      content:
+        application/json:
+          schema: { $ref: '../json-schema/0.1/error-response.schema.json' }
+    NotFound:
+      description: No such case execution is visible to this key.
+      content:
+        application/json:
+          schema: { $ref: '../json-schema/0.1/error-response.schema.json' }
+    Conflict:
+      description: |
+        The request contradicts authoritative state: a sequence mismatch, a superseded
+        lease, or a case execution that is already terminal.
+      content:
+        application/json:
+          schema: { $ref: '../json-schema/0.1/error-response.schema.json' }
+    LeaseExpired:
+      description: |
+        The lease expired and the case execution has returned to the queue. The runner
+        must stop work and claim again rather than resubmitting.
+      content:
+        application/json:
+          schema: { $ref: '../json-schema/0.1/error-response.schema.json' }
+    RateLimited:
+      description: Too many claims; back off for `retry_after_ms`.
+      content:
+        application/json:
+          schema: { $ref: '../json-schema/0.1/error-response.schema.json' }

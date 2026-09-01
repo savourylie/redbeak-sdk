@@ -1,0 +1,30 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.redbeak.taiwaneval.com/0.1/error-response.schema.json",
+  "title": "Error response 0.1",
+  "x-redbeak-boundary": "runner",
+  "description": "Protocol-level error returned by the runner API. Messages are operator-facing and must never echo a credential, lease token, setup payload, scenario content, agent output, or observation value.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "code", "message"],
+  "properties": {
+    "schema_version": { "$ref": "common.schema.json#/$defs/schema_version" },
+    "code": {
+      "enum": [
+        "unauthorized",
+        "forbidden",
+        "not_found",
+        "lease_invalid",
+        "lease_expired",
+        "sequence_conflict",
+        "already_completed",
+        "contract_version_unsupported",
+        "payload_invalid",
+        "rate_limited",
+        "internal_error"
+      ]
+    },
+    "message": { "type": "string", "minLength": 1, "maxLength": 2000 },
+    "retry_after_ms": { "$ref": "common.schema.json#/$defs/duration_ms" }
+  }
+}

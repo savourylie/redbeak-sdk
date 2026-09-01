@@ -1,0 +1,32 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.redbeak.taiwaneval.com/0.1/turn-submission.schema.json",
+  "title": "Turn submission 0.1",
+  "x-redbeak-boundary": "runner",
+  "description": "Request body for POST /v1/case-executions/{case_execution_id}/turn. Redbeak persists the submission exactly once, keyed by `idempotency_key`; resubmitting the same key returns the original next action without creating a duplicate event.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "lease_token",
+    "sequence",
+    "idempotency_key",
+    "output",
+    "observations",
+    "operational"
+  ],
+  "properties": {
+    "schema_version": { "$ref": "common.schema.json#/$defs/schema_version" },
+    "lease_token": { "$ref": "common.schema.json#/$defs/opaque_token" },
+    "sequence": { "$ref": "common.schema.json#/$defs/sequence" },
+    "idempotency_key": { "$ref": "common.schema.json#/$defs/uuid" },
+    "output": { "$ref": "agent-output.schema.json" },
+    "observations": {
+      "description": "Facts observed for this turn. Empty when the assignment requested none. Outcome observations may be collected after every turn to preserve temporal evidence.",
+      "type": "array",
+      "maxItems": 256,
+      "items": { "$ref": "observation.schema.json" }
+    },
+    "operational": { "$ref": "common.schema.json#/$defs/operational" }
+  }
+}

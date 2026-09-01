@@ -1,0 +1,38 @@
+{
+  "schema_version": "0.1",
+  "evaluation_result_id": "ac1e9d9b-d56c-46ea-8789-be5f7a03d209",
+  "case_execution_id": "3b8d6c24-6e95-4f73-9012-4d8e0f3c6b92",
+  "run_id": "2a9c7b13-5d84-4e62-8f01-3c7d9e2b5a81",
+  "data_classification": "synthetic",
+  "revision": 1,
+  "verdict": "not_evaluated",
+  "domain": "gorilla_file_system",
+  "response_assertions": [
+    {
+      "name": "mentions_destination",
+      "passed": true
+    }
+  ],
+  "outcome_assertions": [
+    {
+      "name": "file_exists",
+      "passed": true
+    }
+  ],
+  "failure_stage": "none",
+  "duration_ms": 8400,
+  "retry_count": 0,
+  "evidence": {
+    "turn_event_count": 4,
+    "observation_count": 2,
+    "artifacts": [
+      {
+        "artifact_id": "8a3c1b79-b34a-44c8-a567-9c3d5e81b0e7",
+        "sha256": "sha256:a3f1a3f1a3f1a3f1a3f1a3f1a3f1a3f1a3f1a3f1a3f1a3f1a3f1a3f1a3f1a3f1"
+      }
+    ]
+  },
+  "evaluator_version": "0.1.0",
+  "failure_taxonomy_version": "0.1.0",
+  "evaluated_at": "2026-09-01T10:20:30Z"
+}

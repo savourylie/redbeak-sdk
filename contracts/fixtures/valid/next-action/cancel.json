@@ -1,0 +1,6 @@
+{
+  "schema_version": "0.1",
+  "action": "cancel",
+  "reason": "lease_expired",
+  "detail": "Lease elapsed while the adapter was working."
+}

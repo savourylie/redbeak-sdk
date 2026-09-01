@@ -1,0 +1,131 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.redbeak.taiwaneval.com/0.1/evaluation-result.schema.json",
+  "title": "Item-level evaluation result 0.1",
+  "x-redbeak-boundary": "internal",
+  "description": "One versioned verdict for one case execution. Results are append-only revisions so an evaluator can be corrected and rerun without reinvoking the customer agent. Infrastructure and evaluator failures are represented distinctly from target failures and are never silently counted as incorrect answers.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "evaluation_result_id",
+    "case_execution_id",
+    "run_id",
+    "data_classification",
+    "revision",
+    "verdict",
+    "failure_stage",
+    "evaluator_version",
+    "failure_taxonomy_version",
+    "evaluated_at"
+  ],
+  "properties": {
+    "schema_version": { "$ref": "common.schema.json#/$defs/schema_version" },
+    "evaluation_result_id": { "$ref": "common.schema.json#/$defs/uuid" },
+    "case_execution_id": { "$ref": "common.schema.json#/$defs/uuid" },
+    "run_id": { "$ref": "common.schema.json#/$defs/uuid" },
+    "data_classification": {
+      "description": "Carried on every result row so that any view rendering it can satisfy the synthetic-evidence labelling rule without joining back to the run manifest.",
+      "$ref": "common.schema.json#/$defs/data_classification"
+    },
+    "revision": { "type": "integer", "minimum": 1 },
+    "verdict": {
+      "enum": ["pass", "fail", "refused", "invalid", "not_evaluated"]
+    },
+    "domain": {
+      "description": "Free-form slug. The generic contract stays domain-agnostic; the BFCL domain vocabulary belongs to the importer and suite, not here.",
+      "$ref": "common.schema.json#/$defs/slug"
+    },
+    "response_assertions": {
+      "type": "array",
+      "maxItems": 128,
+      "items": { "$ref": "#/$defs/assertion" }
+    },
+    "outcome_assertions": {
+      "type": "array",
+      "maxItems": 128,
+      "items": { "$ref": "#/$defs/assertion" }
+    },
+    "failure_stage": {
+      "description": "Where the case stopped being trustworthy. `none` for an evaluated case. `target_response`, `target_outcome`, and `target_unavailable` are genuine system-under-test failures; the remaining values are Redbeak-side or integration failures and must be reported separately from them, never as incorrect answers. `target_unavailable` means the target never produced a judgeable answer, so it pairs with `not_evaluated` rather than `fail`.",
+      "enum": [
+        "none",
+        "target_response",
+        "target_outcome",
+        "target_unavailable",
+        "adapter",
+        "transport",
+        "timeout",
+        "protocol",
+        "runner",
+        "evaluator"
+      ]
+    },
+    "failure_taxonomy_code": { "$ref": "common.schema.json#/$defs/slug" },
+    "duration_ms": { "$ref": "common.schema.json#/$defs/duration_ms" },
+    "retry_count": { "type": "integer", "minimum": 0, "maximum": 100 },
+    "evidence": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["turn_event_count"],
+      "properties": {
+        "turn_event_count": { "type": "integer", "minimum": 0 },
+        "observation_count": { "type": "integer", "minimum": 0 },
+        "artifacts": {
+          "type": "array",
+          "maxItems": 64,
+          "items": { "$ref": "common.schema.json#/$defs/artifact_ref" }
+        }
+      }
+    },
+    "evaluator_version": { "$ref": "common.schema.json#/$defs/version_string" },
+    "failure_taxonomy_version": { "$ref": "common.schema.json#/$defs/version_string" },
+    "evaluated_at": { "$ref": "common.schema.json#/$defs/timestamp" },
+    "explanation": { "type": "string", "maxLength": 5000 }
+  },
+  "allOf": [
+    {
+      "$comment": "A pass has no failure stage.",
+      "if": { "properties": { "verdict": { "const": "pass" } }, "required": ["verdict"] },
+      "then": { "properties": { "failure_stage": { "const": "none" } } }
+    },
+    {
+      "$comment": "not_evaluated must name why the case never reached a verdict.",
+      "if": { "properties": { "verdict": { "const": "not_evaluated" } }, "required": ["verdict"] },
+      "then": { "properties": { "failure_stage": { "not": { "const": "none" } } } }
+    },
+    {
+      "$comment": "A fail is a target failure; infrastructure faults are not incorrect answers.",
+      "if": { "properties": { "verdict": { "const": "fail" } }, "required": ["verdict"] },
+      "then": {
+        "properties": {
+          "failure_stage": { "enum": ["target_response", "target_outcome"] }
+        }
+      }
+    },
+    {
+      "$comment": "refused and invalid are behaviours read off a real response, so they cannot be attributed to a stage where no response was received.",
+      "if": {
+        "properties": { "verdict": { "enum": ["refused", "invalid"] } },
+        "required": ["verdict"]
+      },
+      "then": {
+        "properties": {
+          "failure_stage": { "enum": ["none", "target_response", "target_outcome"] }
+        }
+      }
+    }
+  ],
+  "$defs": {
+    "assertion": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "passed"],
+      "properties": {
+        "name": { "$ref": "common.schema.json#/$defs/slug" },
+        "passed": { "type": "boolean" },
+        "detail": { "type": "string", "maxLength": 2000 }
+      }
+    }
+  }
+}

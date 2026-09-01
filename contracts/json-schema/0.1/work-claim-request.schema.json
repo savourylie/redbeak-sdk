@@ -1,0 +1,32 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.redbeak.taiwaneval.com/0.1/work-claim-request.schema.json",
+  "title": "Work claim request 0.1",
+  "x-redbeak-boundary": "runner",
+  "description": "Runner-initiated request body for POST /v1/runner/work/claim. The runner authenticates with a project-scoped runner key sent as a bearer credential; no credential is ever carried in this body.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "runner_id", "runner_version", "contract_version", "capabilities"],
+  "properties": {
+    "schema_version": { "$ref": "common.schema.json#/$defs/schema_version" },
+    "runner_id": { "$ref": "common.schema.json#/$defs/uuid" },
+    "runner_version": { "$ref": "common.schema.json#/$defs/version_string" },
+    "contract_version": { "const": "0.1" },
+    "adapter_version": { "$ref": "common.schema.json#/$defs/version_string" },
+    "capabilities": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["max_concurrent_cases"],
+      "properties": {
+        "max_concurrent_cases": { "type": "integer", "minimum": 1, "maximum": 64 },
+        "supports_observations": { "type": "boolean" },
+        "supports_artifacts": { "type": "boolean" },
+        "target_versions": {
+          "type": "array",
+          "maxItems": 32,
+          "items": { "$ref": "common.schema.json#/$defs/version_string" }
+        }
+      }
+    }
+  }
+}

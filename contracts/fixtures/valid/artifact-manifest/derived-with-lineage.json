@@ -1,0 +1,15 @@
+{
+  "schema_version": "0.1",
+  "artifact_id": "9b2d0c8a-c45b-45d9-b678-ad4e6f92c1f8",
+  "sha256": "sha256:b7c2b7c2b7c2b7c2b7c2b7c2b7c2b7c2b7c2b7c2b7c2b7c2b7c2b7c2b7c2b7c2",
+  "media_type": "application/json",
+  "size_bytes": 4096,
+  "role": "derived_aggregate",
+  "produced_by": "evaluator",
+  "data_classification": "synthetic",
+  "created_at": "2026-09-01T10:15:30Z",
+  "storage_ref": "redbeak/raw/bfcl-v3-base/ea13468/multi_turn_base.json",
+  "parent_artifact_ids": ["8a3c1b79-b34a-44c8-a567-9c3d5e81b0e7"],
+  "run_id": "2a9c7b13-5d84-4e62-8f01-3c7d9e2b5a81",
+  "case_execution_id": "3b8d6c24-6e95-4f73-9012-4d8e0f3c6b92"
+}

@@ -1,0 +1,63 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.redbeak.taiwaneval.com/0.1/case-completion.schema.json",
+  "title": "Case completion 0.1",
+  "x-redbeak-boundary": "runner",
+  "description": "Request body for POST /v1/case-executions/{case_execution_id}/complete. Completion closes the lease and queues evaluation. The `allOf` rules below make contradictory payloads schema-invalid in both languages rather than something each implementation has to remember to check.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "lease_token",
+    "idempotency_key",
+    "status",
+    "observations",
+    "operational"
+  ],
+  "properties": {
+    "schema_version": { "$ref": "common.schema.json#/$defs/schema_version" },
+    "lease_token": { "$ref": "common.schema.json#/$defs/opaque_token" },
+    "idempotency_key": { "$ref": "common.schema.json#/$defs/uuid" },
+    "status": {
+      "description": "Terminal state reported by the runner. `completed` means the case ran to the end of its inputs, whatever the quality of the target's answers; a weak or wrong answer is not a failure here, it is evidence the evaluator judges.",
+      "enum": ["completed", "execution_failed", "canceled"]
+    },
+    "observations": {
+      "type": "array",
+      "maxItems": 256,
+      "items": { "$ref": "observation.schema.json" }
+    },
+    "error": { "$ref": "common.schema.json#/$defs/execution_error" },
+    "cancel_reason": { "$ref": "common.schema.json#/$defs/cancel_reason" },
+    "artifacts": {
+      "type": "array",
+      "maxItems": 64,
+      "items": { "$ref": "common.schema.json#/$defs/artifact_ref" }
+    },
+    "operational": { "$ref": "common.schema.json#/$defs/operational" }
+  },
+  "allOf": [
+    {
+      "$comment": "execution_failed must say what failed.",
+      "if": { "properties": { "status": { "const": "execution_failed" } }, "required": ["status"] },
+      "then": { "required": ["error"] }
+    },
+    {
+      "$comment": "completed must not carry a failure or a cancellation.",
+      "if": { "properties": { "status": { "const": "completed" } }, "required": ["status"] },
+      "then": {
+        "allOf": [
+          { "not": { "required": ["error"] } },
+          { "not": { "required": ["cancel_reason"] } }
+        ]
+      }
+    },
+    {
+      "$comment": "canceled must give a machine-readable reason and is not an execution error.",
+      "if": { "properties": { "status": { "const": "canceled" } }, "required": ["status"] },
+      "then": {
+        "allOf": [{ "required": ["cancel_reason"] }, { "not": { "required": ["error"] } }]
+      }
+    }
+  ]
+}

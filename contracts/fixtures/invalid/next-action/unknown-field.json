@@ -1,0 +1,11 @@
+{
+  "schema_version": "0.1",
+  "action": "continue",
+  "input": {
+    "sequence": 1,
+    "type": "user_message",
+    "content": "Now list the root folder."
+  },
+  "lease_expires_at": "2026-09-01T10:20:30Z",
+  "remaining_turns": 3
+}

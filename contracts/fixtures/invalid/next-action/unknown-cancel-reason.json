@@ -1,0 +1,5 @@
+{
+  "schema_version": "0.1",
+  "action": "cancel",
+  "reason": "target_was_bad"
+}

@@ -1,0 +1,20 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.redbeak.taiwaneval.com/0.1/observation.schema.json",
+  "title": "Observation 0.1",
+  "x-redbeak-boundary": "runner",
+  "description": "A typed fact observed from agent output or customer-side state. An observation is evidence, never a verdict: it carries no pass/fail, score, expected value, or threshold. Keeping judgment out of this object is what keeps evaluation intelligence on the Redbeak side and makes the adapter an integration boundary rather than a customer-controlled scorer.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["name", "value"],
+  "properties": {
+    "name": { "$ref": "common.schema.json#/$defs/fact_name" },
+    "value": {
+      "description": "The observed value itself. Any JSON type, because facts are domain-shaped.",
+      "type": ["boolean", "number", "string", "array", "object", "null"]
+    },
+    "subject": { "type": "string", "maxLength": 1000 },
+    "observed_at": { "$ref": "common.schema.json#/$defs/timestamp" },
+    "source": { "enum": ["agent_output", "customer_state", "adapter_computed"] }
+  }
+}

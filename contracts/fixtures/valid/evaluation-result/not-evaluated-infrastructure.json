@@ -1,0 +1,23 @@
+{
+  "schema_version": "0.1",
+  "evaluation_result_id": "ac1e9d9b-d56c-46ea-8789-be5f7a03d209",
+  "case_execution_id": "3b8d6c24-6e95-4f73-9012-4d8e0f3c6b92",
+  "run_id": "2a9c7b13-5d84-4e62-8f01-3c7d9e2b5a81",
+  "data_classification": "synthetic",
+  "revision": 1,
+  "verdict": "not_evaluated",
+  "domain": "gorilla_file_system",
+  "response_assertions": [],
+  "outcome_assertions": [],
+  "failure_stage": "transport",
+  "duration_ms": 8400,
+  "retry_count": 0,
+  "evidence": {
+    "turn_event_count": 1,
+    "observation_count": 0
+  },
+  "evaluator_version": "0.1.0",
+  "failure_taxonomy_version": "0.1.0",
+  "evaluated_at": "2026-09-01T10:20:30Z",
+  "failure_taxonomy_code": "connection_reset"
+}

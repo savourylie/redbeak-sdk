@@ -1,0 +1,20 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.redbeak.taiwaneval.com/0.1/agent-output.schema.json",
+  "title": "Agent output 0.1",
+  "x-redbeak-boundary": "runner",
+  "description": "The user-visible output produced by the system under test for one input. The adapter may run any number of internal model or tool steps to produce it; Redbeak requires only the resulting output. Tool traces are optional Level 3 diagnostics and are not part of this contract.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["type", "content"],
+  "properties": {
+    "type": { "const": "agent_message" },
+    "content": { "type": "string", "maxLength": 200000 },
+    "truncated": { "type": "boolean" },
+    "artifacts": {
+      "type": "array",
+      "maxItems": 32,
+      "items": { "$ref": "common.schema.json#/$defs/artifact_ref" }
+    }
+  }
+}

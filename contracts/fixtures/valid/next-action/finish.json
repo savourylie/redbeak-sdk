@@ -1,0 +1,7 @@
+{
+  "schema_version": "0.1",
+  "action": "finish",
+  "observation_request": {
+    "fact_names": ["file_exists"]
+  }
+}

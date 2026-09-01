@@ -1,0 +1,23 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.redbeak.taiwaneval.com/0.1/heartbeat-request.schema.json",
+  "title": "Heartbeat request 0.1",
+  "x-redbeak-boundary": "runner",
+  "description": "Request body for POST /v1/case-executions/{case_execution_id}/heartbeat. A heartbeat extends a still-valid lease while the adapter is working. It cannot resurrect a completed, canceled, or superseded lease; the orchestrator answers those with a conflict rather than a new expiry.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "lease_token"],
+  "properties": {
+    "schema_version": { "$ref": "common.schema.json#/$defs/schema_version" },
+    "lease_token": { "$ref": "common.schema.json#/$defs/opaque_token" },
+    "progress": {
+      "description": "Optional liveness detail. Deliberately non-semantic: it never carries agent output or observation values.",
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "sequence": { "$ref": "common.schema.json#/$defs/sequence" },
+        "elapsed_ms": { "$ref": "common.schema.json#/$defs/duration_ms" }
+      }
+    }
+  }
+}

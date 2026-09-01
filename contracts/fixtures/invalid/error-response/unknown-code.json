@@ -1,0 +1,5 @@
+{
+  "schema_version": "0.1",
+  "code": "target_was_wrong",
+  "message": "The lease expired; claim again instead of resubmitting."
+}

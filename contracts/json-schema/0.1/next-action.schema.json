@@ -1,0 +1,43 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.redbeak.taiwaneval.com/0.1/next-action.schema.json",
+  "title": "Next action 0.1",
+  "x-redbeak-boundary": "runner",
+  "description": "Response to a turn submission. Redbeak returns exactly one action. `continue` reveals the next user input and nothing beyond it, so the runner can never see the remainder of the scenario.",
+  "oneOf": [
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["schema_version", "action", "input"],
+      "properties": {
+        "schema_version": { "$ref": "common.schema.json#/$defs/schema_version" },
+        "action": { "const": "continue" },
+        "input": { "$ref": "scenario-input.schema.json" },
+        "observation_request": { "$ref": "common.schema.json#/$defs/observation_request" },
+        "lease_expires_at": { "$ref": "common.schema.json#/$defs/timestamp" }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["schema_version", "action"],
+      "properties": {
+        "schema_version": { "$ref": "common.schema.json#/$defs/schema_version" },
+        "action": { "const": "finish" },
+        "observation_request": { "$ref": "common.schema.json#/$defs/observation_request" },
+        "lease_expires_at": { "$ref": "common.schema.json#/$defs/timestamp" }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["schema_version", "action", "reason"],
+      "properties": {
+        "schema_version": { "$ref": "common.schema.json#/$defs/schema_version" },
+        "action": { "const": "cancel" },
+        "reason": { "$ref": "common.schema.json#/$defs/cancel_reason" },
+        "detail": { "type": "string", "maxLength": 2000 }
+      }
+    }
+  ]
+}

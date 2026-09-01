@@ -1,0 +1,56 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.redbeak.taiwaneval.com/0.1/artifact-manifest.schema.json",
+  "title": "Artifact manifest 0.1",
+  "x-redbeak-boundary": "internal",
+  "description": "One content-addressed object in the evidence chain: raw source -> normalized scenario -> run manifest -> turn events -> raw observations -> parsed observations -> item-level result -> derived aggregates. `parent_artifact_ids` records lineage so every aggregate can be traced back to the bytes it came from.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "artifact_id",
+    "sha256",
+    "media_type",
+    "size_bytes",
+    "role",
+    "produced_by",
+    "data_classification",
+    "created_at"
+  ],
+  "properties": {
+    "schema_version": { "$ref": "common.schema.json#/$defs/schema_version" },
+    "artifact_id": { "$ref": "common.schema.json#/$defs/uuid" },
+    "sha256": { "$ref": "common.schema.json#/$defs/sha256" },
+    "media_type": { "type": "string", "minLength": 1, "maxLength": 200 },
+    "size_bytes": { "type": "integer", "minimum": 0 },
+    "role": {
+      "enum": [
+        "raw_source",
+        "normalized_scenario",
+        "run_manifest",
+        "turn_event",
+        "raw_observation",
+        "parsed_observation",
+        "evaluation_result",
+        "derived_aggregate"
+      ]
+    },
+    "produced_by": { "enum": ["importer", "orchestrator", "runner", "evaluator"] },
+    "data_classification": { "$ref": "common.schema.json#/$defs/data_classification" },
+    "parent_artifact_ids": {
+      "type": "array",
+      "maxItems": 64,
+      "uniqueItems": true,
+      "items": { "$ref": "common.schema.json#/$defs/uuid" }
+    },
+    "run_id": { "$ref": "common.schema.json#/$defs/uuid" },
+    "case_execution_id": { "$ref": "common.schema.json#/$defs/uuid" },
+    "storage_ref": {
+      "description": "Opaque storage locator. Never a pre-signed URL or any string carrying a credential.",
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 500
+    },
+    "created_at": { "$ref": "common.schema.json#/$defs/timestamp" }
+  }
+}

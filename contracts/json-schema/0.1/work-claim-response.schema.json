@@ -1,0 +1,94 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.redbeak.taiwaneval.com/0.1/work-claim-response.schema.json",
+  "title": "Work claim response 0.1",
+  "x-redbeak-boundary": "runner",
+  "description": "Response to POST /v1/runner/work/claim. Redbeak atomically leases at most one queued case execution and reveals sequence 0 only. The assignment deliberately has no field in which future turns, ground truth, expected outcomes, rubrics, or scoring thresholds could travel.",
+  "oneOf": [
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["schema_version", "status", "lease", "assignment"],
+      "properties": {
+        "schema_version": { "$ref": "common.schema.json#/$defs/schema_version" },
+        "status": { "const": "leased" },
+        "lease": { "$ref": "#/$defs/lease" },
+        "assignment": { "$ref": "#/$defs/assignment" }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["schema_version", "status", "retry_after_ms"],
+      "properties": {
+        "schema_version": { "$ref": "common.schema.json#/$defs/schema_version" },
+        "status": { "const": "no_work" },
+        "retry_after_ms": { "$ref": "common.schema.json#/$defs/duration_ms" }
+      }
+    }
+  ],
+  "$defs": {
+    "lease": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["lease_id", "lease_token", "expires_at"],
+      "properties": {
+        "lease_id": { "$ref": "common.schema.json#/$defs/uuid" },
+        "lease_token": { "$ref": "common.schema.json#/$defs/opaque_token" },
+        "expires_at": { "$ref": "common.schema.json#/$defs/timestamp" }
+      }
+    },
+    "assignment": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "project_id",
+        "run_id",
+        "case_execution_id",
+        "scenario_id",
+        "scenario_external_id",
+        "sequence",
+        "setup",
+        "input"
+      ],
+      "properties": {
+        "project_id": { "$ref": "common.schema.json#/$defs/uuid" },
+        "run_id": { "$ref": "common.schema.json#/$defs/uuid" },
+        "case_execution_id": { "$ref": "common.schema.json#/$defs/uuid" },
+        "scenario_id": { "$ref": "common.schema.json#/$defs/uuid" },
+        "scenario_external_id": { "type": "string", "minLength": 1, "maxLength": 200 },
+        "target_version": { "$ref": "common.schema.json#/$defs/version_string" },
+        "sequence": {
+          "description": "Always 0. A claim reveals the first input only; later inputs arrive one at a time via the next action of a turn submission.",
+          "const": 0
+        },
+        "setup": { "$ref": "#/$defs/setup" },
+        "input": { "$ref": "scenario-input.schema.json" },
+        "observation_request": { "$ref": "common.schema.json#/$defs/observation_request" }
+      }
+    },
+    "setup": {
+      "description": "Reset/setup material for the target session, inline or by artifact reference. The inline payload is intentionally opaque because it is customer- and domain-shaped mock-environment state, and it is the one place in the contract where `additionalProperties: false` cannot apply. It is therefore typed as `leak_free_object`, which forbids evaluation-private property names at any depth, so opacity cannot become a leak channel.",
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["type", "payload"],
+          "properties": {
+            "type": { "const": "inline" },
+            "payload": { "$ref": "common.schema.json#/$defs/leak_free_object" }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["type", "artifact"],
+          "properties": {
+            "type": { "const": "artifact_ref" },
+            "artifact": { "$ref": "common.schema.json#/$defs/artifact_ref" }
+          }
+        }
+      ]
+    }
+  }
+}

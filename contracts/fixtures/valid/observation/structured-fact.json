@@ -1,0 +1,9 @@
+{
+  "name": "portfolio_state",
+  "value": {
+    "cash": 1200.5,
+    "positions": ["AAPL"]
+  },
+  "observed_at": "2026-09-01T10:15:30Z",
+  "source": "customer_state"
+}

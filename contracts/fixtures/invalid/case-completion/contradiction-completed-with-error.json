@@ -1,0 +1,29 @@
+{
+  "schema_version": "0.1",
+  "lease_token": "lease_v1_2f8c41ab93d5e7f60a1b",
+  "idempotency_key": "7f4b2a68-a239-43b7-9456-8b2c4d70afd6",
+  "status": "completed",
+  "observations": [
+    {
+      "name": "file_exists",
+      "value": true,
+      "subject": "documents/Archived/IdeasArchive.txt",
+      "source": "customer_state"
+    }
+  ],
+  "artifacts": [
+    {
+      "artifact_id": "8a3c1b79-b34a-44c8-a567-9c3d5e81b0e7",
+      "sha256": "sha256:a3f1a3f1a3f1a3f1a3f1a3f1a3f1a3f1a3f1a3f1a3f1a3f1a3f1a3f1a3f1a3f1"
+    }
+  ],
+  "operational": {
+    "duration_ms": 8400,
+    "retry_count": 0
+  },
+  "error": {
+    "stage": "adapter",
+    "code": "boom",
+    "message": "x"
+  }
+}

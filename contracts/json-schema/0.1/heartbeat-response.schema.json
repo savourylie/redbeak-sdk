@@ -1,0 +1,15 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.redbeak.taiwaneval.com/0.1/heartbeat-response.schema.json",
+  "title": "Heartbeat response 0.1",
+  "x-redbeak-boundary": "runner",
+  "description": "Renewed lease window returned for a valid heartbeat.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "lease_id", "expires_at"],
+  "properties": {
+    "schema_version": { "$ref": "common.schema.json#/$defs/schema_version" },
+    "lease_id": { "$ref": "common.schema.json#/$defs/uuid" },
+    "expires_at": { "$ref": "common.schema.json#/$defs/timestamp" }
+  }
+}

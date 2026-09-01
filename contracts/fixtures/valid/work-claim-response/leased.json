@@ -1,0 +1,39 @@
+{
+  "schema_version": "0.1",
+  "status": "leased",
+  "lease": {
+    "lease_id": "5d6f4e46-8017-4195-b234-6f0a2b5e8db4",
+    "lease_token": "lease_v1_2f8c41ab93d5e7f60a1b",
+    "expires_at": "2026-09-01T10:20:30Z"
+  },
+  "assignment": {
+    "project_id": "1f0b8a42-7c3e-4d51-9b6a-2e8f5c1d4a70",
+    "run_id": "2a9c7b13-5d84-4e62-8f01-3c7d9e2b5a81",
+    "case_execution_id": "3b8d6c24-6e95-4f73-9012-4d8e0f3c6b92",
+    "scenario_id": "4c7e5d35-7f06-4084-a123-5e9f1a4d7ca3",
+    "scenario_external_id": "multi_turn_base_0",
+    "target_version": "golden-1.0.0",
+    "sequence": 0,
+    "setup": {
+      "type": "inline",
+      "payload": {
+        "root": {
+          "documents": {
+            "IdeasArchive.txt": {
+              "size": 512
+            }
+          },
+          "Archived": {}
+        }
+      }
+    },
+    "input": {
+      "sequence": 0,
+      "type": "user_message",
+      "content": "Archive the ideas file into documents/Archived/ and tell me where it ended up."
+    },
+    "observation_request": {
+      "fact_names": ["file_exists", "file_removed_from_source"]
+    }
+  }
+}

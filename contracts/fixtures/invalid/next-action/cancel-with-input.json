@@ -1,0 +1,10 @@
+{
+  "schema_version": "0.1",
+  "action": "cancel",
+  "reason": "run_canceled",
+  "input": {
+    "sequence": 0,
+    "type": "user_message",
+    "content": "Archive the ideas file into documents/Archived/ and tell me where it ended up."
+  }
+}

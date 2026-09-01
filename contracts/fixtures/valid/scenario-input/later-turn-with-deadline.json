@@ -1,0 +1,7 @@
+{
+  "sequence": 3,
+  "type": "user_message",
+  "content": "Now list what is left in the root folder.",
+  "locale": "en-US",
+  "deadline_ms": 30000
+}

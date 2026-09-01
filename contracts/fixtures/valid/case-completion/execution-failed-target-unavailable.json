@@ -1,0 +1,17 @@
+{
+  "schema_version": "0.1",
+  "lease_token": "lease_v1_2f8c41ab93d5e7f60a1b",
+  "idempotency_key": "7f4b2a68-a239-43b7-9456-8b2c4d70afd6",
+  "status": "execution_failed",
+  "observations": [],
+  "error": {
+    "stage": "target_unavailable",
+    "code": "agent_returned_500",
+    "message": "The target agent returned HTTP 500 for three consecutive attempts.",
+    "retryable": false
+  },
+  "operational": {
+    "duration_ms": 3100,
+    "retry_count": 2
+  }
+}
