@@ -129,7 +129,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/CompletionAccepted'
+                $ref: '../json-schema/0.1/completion-accepted.schema.json'
         '400': { $ref: '#/components/responses/PayloadInvalid' }
         '401': { $ref: '#/components/responses/Unauthorized' }
         '403': { $ref: '#/components/responses/Forbidden' }
@@ -184,19 +184,6 @@ components:
       description: The leased case execution.
       schema:
         $ref: '../json-schema/0.1/common.schema.json#/$defs/uuid'
-
-  schemas:
-    CompletionAccepted:
-      type: object
-      additionalProperties: false
-      required: [schema_version, case_execution_id, status]
-      properties:
-        schema_version:
-          $ref: '../json-schema/0.1/common.schema.json#/$defs/schema_version'
-        case_execution_id:
-          $ref: '../json-schema/0.1/common.schema.json#/$defs/uuid'
-        status:
-          const: evaluation_queued
 
   responses:
     PayloadInvalid:

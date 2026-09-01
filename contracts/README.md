@@ -7,7 +7,7 @@ types, so the two cannot drift into disagreeing about what the wire accepts.
 
 ```text
 contracts/
-├── json-schema/0.1/   15 schemas, including the shared definitions
+├── json-schema/0.1/   16 schemas, including the shared definitions
 ├── openapi/           the four-endpoint runner surface
 └── fixtures/          valid and invalid examples consumed by both languages
 ```

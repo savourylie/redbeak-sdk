@@ -1,0 +1,18 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.redbeak.taiwaneval.com/0.1/completion-accepted.schema.json",
+  "title": "Completion accepted 0.1",
+  "x-redbeak-boundary": "runner",
+  "description": "Response to POST /v1/case-executions/{case_execution_id}/complete. It confirms the completion was recorded exactly once and reports what Redbeak did next. Replaying the same idempotency key returns this same body rather than queueing a second evaluation, which is what lets a killed runner restart without duplicating evidence.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "case_execution_id", "status"],
+  "properties": {
+    "schema_version": { "$ref": "common.schema.json#/$defs/schema_version" },
+    "case_execution_id": { "$ref": "common.schema.json#/$defs/uuid" },
+    "status": {
+      "description": "`evaluation_queued` follows a `completed` case, which has a judgeable answer. A case that ended `execution_failed` or `canceled` is `recorded`: the state machine makes those terminal rather than routing them to the evaluator, so claiming evaluation was queued for them would be false.",
+      "enum": ["evaluation_queued", "recorded"]
+    }
+  }
+}
