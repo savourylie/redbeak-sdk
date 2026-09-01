@@ -1,0 +1,182 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.redbeak.taiwaneval.com/0.1/suite-version.schema.json",
+  "title": "Suite version 0.1",
+  "x-redbeak-boundary": "internal",
+  "description": "An immutable evaluation-suite version: a frozen case selection plus the evaluator contract the selection is scored under. Cases are referenced by external id and normalized-scenario hash rather than copied, which is what lets a four-case checkpoint suite, a reviewed demo suite, and the full Base suite share one imported dataset version without duplicating records. This document is Redbeak-internal evidence and is never sent to a runner. It carries no expected values, rubrics, or thresholds: only the hash of the evaluator fixtures, whose contents stay in the private artifact directory.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "suite_id",
+    "suite_version_id",
+    "suite_slug",
+    "version",
+    "case_manifest_sha256",
+    "case_count",
+    "domains",
+    "data_classification",
+    "display_label",
+    "dataset",
+    "selection",
+    "evaluator_contract",
+    "compatibility",
+    "cases"
+  ],
+  "properties": {
+    "schema_version": { "$ref": "common.schema.json#/$defs/schema_version" },
+    "suite_id": { "$ref": "common.schema.json#/$defs/uuid" },
+    "suite_version_id": { "$ref": "common.schema.json#/$defs/uuid" },
+    "suite_slug": { "$ref": "common.schema.json#/$defs/slug" },
+    "version": { "$ref": "common.schema.json#/$defs/version_string" },
+    "case_manifest_sha256": {
+      "description": "Hash of the canonical `cases` array alone. This is the value a run manifest pins, so a reordered or edited selection cannot masquerade as the same suite version.",
+      "$ref": "common.schema.json#/$defs/sha256"
+    },
+    "case_count": { "type": "integer", "minimum": 1, "maximum": 100000 },
+    "domains": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 64,
+      "uniqueItems": true,
+      "items": { "$ref": "common.schema.json#/$defs/slug" }
+    },
+    "data_classification": { "$ref": "common.schema.json#/$defs/data_classification" },
+    "display_label": {
+      "description": "Operator-facing origin label. Demo v0 values are always Synthetic / BFCL-derived.",
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 100
+    },
+    "dataset": { "$ref": "#/$defs/dataset_pin" },
+    "selection": { "$ref": "#/$defs/selection" },
+    "evaluator_contract": { "$ref": "#/$defs/evaluator_contract" },
+    "compatibility": { "$ref": "#/$defs/compatibility" },
+    "cases": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 100000,
+      "uniqueItems": true,
+      "items": { "$ref": "#/$defs/case_ref" }
+    }
+  },
+  "$defs": {
+    "dataset_pin": {
+      "description": "The imported dataset version this suite selects from. Field names match the `dataset` block of run-manifest so a run can copy the pin without remapping.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "dataset_id",
+        "dataset_version_id",
+        "dataset_slug",
+        "version",
+        "content_sha256",
+        "source_revision"
+      ],
+      "properties": {
+        "dataset_id": { "$ref": "common.schema.json#/$defs/uuid" },
+        "dataset_version_id": { "$ref": "common.schema.json#/$defs/uuid" },
+        "dataset_slug": { "$ref": "common.schema.json#/$defs/slug" },
+        "version": { "$ref": "common.schema.json#/$defs/version_string" },
+        "content_sha256": { "$ref": "common.schema.json#/$defs/sha256" },
+        "source_revision": {
+          "type": "string",
+          "minLength": 7,
+          "maxLength": 64,
+          "pattern": "^[0-9a-f]{7,40}$"
+        }
+      }
+    },
+    "selection": {
+      "description": "How this case set was chosen, recorded so the selection is reproducible and reviewable rather than an unexplained list of ids. `feature_basis` is load-bearing: a rule computed only from runner-visible features cannot itself disclose evaluator-private material, which is what allows the rule to be published beside the manifest.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "rule",
+        "rule_version",
+        "description",
+        "feature_basis",
+        "reviewed_at",
+        "review_note"
+      ],
+      "properties": {
+        "rule": { "$ref": "common.schema.json#/$defs/slug" },
+        "rule_version": { "$ref": "common.schema.json#/$defs/version_string" },
+        "description": { "type": "string", "minLength": 1, "maxLength": 2000 },
+        "feature_basis": {
+          "description": "Which class of case features the rule reads. `runner_visible` means turn count, domain, and mock tool-registry names only.",
+          "enum": ["runner_visible", "evaluator_private"]
+        },
+        "reviewed_at": { "$ref": "common.schema.json#/$defs/timestamp" },
+        "review_note": { "type": "string", "minLength": 1, "maxLength": 2000 }
+      }
+    },
+    "evaluator_contract": {
+      "description": "The versioned scoring contract this suite is evaluated under. `fixture_sha256` pins the private expected-evidence set for exactly this case selection without inlining any of it, so the suite manifest stays free of expected values.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "evaluator_version",
+        "failure_taxonomy_version",
+        "assertion_kinds",
+        "fixture_sha256",
+        "fixture_storage_ref"
+      ],
+      "properties": {
+        "evaluator_version": { "$ref": "common.schema.json#/$defs/version_string" },
+        "failure_taxonomy_version": { "$ref": "common.schema.json#/$defs/version_string" },
+        "assertion_kinds": {
+          "description": "Which observable assertion families the evaluator may draw on. Demo v0 judges observable response and outcome facts; tool-path disclosure is deliberately absent.",
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 8,
+          "uniqueItems": true,
+          "items": { "enum": ["response", "outcome"] }
+        },
+        "fixture_sha256": { "$ref": "common.schema.json#/$defs/sha256" },
+        "fixture_storage_ref": {
+          "description": "Opaque locator for the evaluator-private fixture set. Never a pre-signed URL or any string carrying a credential.",
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 500
+        }
+      }
+    },
+    "compatibility": {
+      "description": "The tuple two runs must agree on before their results may be compared as baseline and candidate. Recording it as one hash plus its inputs means a later comparison can refuse mismatched runs instead of silently averaging across different case sets or evaluator versions.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "compatibility_key",
+        "contract_version",
+        "dataset_version_id",
+        "case_manifest_sha256",
+        "evaluator_version",
+        "failure_taxonomy_version"
+      ],
+      "properties": {
+        "compatibility_key": { "$ref": "common.schema.json#/$defs/sha256" },
+        "contract_version": { "const": "0.1" },
+        "dataset_version_id": { "$ref": "common.schema.json#/$defs/uuid" },
+        "case_manifest_sha256": { "$ref": "common.schema.json#/$defs/sha256" },
+        "evaluator_version": { "$ref": "common.schema.json#/$defs/version_string" },
+        "failure_taxonomy_version": { "$ref": "common.schema.json#/$defs/version_string" }
+      }
+    },
+    "case_ref": {
+      "description": "A reference to one normalized scenario, not a copy of it. `scenario_sha256` binds the reference to exact bytes, so a suite cannot drift onto a mutated record while keeping its identity.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["external_id", "domain", "scenario_sha256"],
+      "properties": {
+        "external_id": { "type": "string", "minLength": 1, "maxLength": 200 },
+        "domain": { "$ref": "common.schema.json#/$defs/slug" },
+        "scenario_sha256": { "$ref": "common.schema.json#/$defs/sha256" },
+        "selection_stratum": {
+          "description": "Which stratum of a stratified rule placed this case in the suite. Absent for suites whose rule has no strata, such as the full-Base selection.",
+          "$ref": "common.schema.json#/$defs/slug"
+        }
+      }
+    }
+  }
+}
