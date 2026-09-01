@@ -1,0 +1,13 @@
+[project]
+name = "redbeak-adapter-sdk"
+version = "0.1.0"
+description = "Asynchronous TargetAdapter contract and typed helpers for Redbeak customer-side integrations"
+requires-python = ">=3.11"
+dependencies = ["redbeak-contracts"]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/redbeak_adapter_sdk"]

@@ -147,6 +147,34 @@ def validator_for(name: str, version: str = CONTRACT_VERSION) -> Draft202012Vali
     return Draft202012Validator(load_schema(name, version), registry=_registry(version))
 
 
+@cache
+def validator_for_definition(
+    name: str, definition: str, version: str = CONTRACT_VERSION
+) -> Draft202012Validator:
+    """Validator for one ``$defs`` entry inside a schema document.
+
+    Several contract components exist only as shared definitions —
+    ``observation_request`` and ``execution_error`` among them — because they are
+    embedded in envelopes rather than sent as one. Validating them still has to
+    go through the same document that the envelopes ``$ref``, not a fragment
+    copied into Python, or the two could disagree about an embedded payload
+    while every envelope test still passed.
+    """
+    schema = load_schema(name, version)
+    if definition not in schema.get("$defs", {}):
+        raise ContractError(f"{name} has no $defs/{definition}")
+    return Draft202012Validator(
+        {"$ref": f"{schema['$id']}#/$defs/{definition}"}, registry=_registry(version)
+    )
+
+
+def validate_definition(
+    name: str, definition: str, document: Any, version: str = CONTRACT_VERSION
+) -> None:
+    """Raise :class:`jsonschema.ValidationError` if ``document`` is not valid."""
+    validator_for_definition(name, definition, version).validate(document)
+
+
 def validate(name: str, document: Any, version: str = CONTRACT_VERSION) -> None:
     """Raise :class:`jsonschema.ValidationError` if ``document`` is not valid."""
     validator_for(name, version).validate(document)
@@ -240,5 +268,7 @@ __all__ = [
     "schema_dir",
     "schema_names",
     "validate",
+    "validate_definition",
     "validator_for",
+    "validator_for_definition",
 ]
