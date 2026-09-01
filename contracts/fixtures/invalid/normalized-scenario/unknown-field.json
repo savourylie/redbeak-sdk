@@ -1,0 +1,29 @@
+{
+  "schema_version": "0.1",
+  "external_id": "multi_turn_base_0",
+  "domain": "gorilla_file_system",
+  "turns": [
+    {
+      "sequence": 0,
+      "type": "user_message",
+      "content": "Move the file."
+    }
+  ],
+  "setup": {
+    "type": "inline",
+    "payload": { "GorillaFileSystem": {} }
+  },
+  "involved_classes": ["GorillaFileSystem"],
+  "data_classification": "synthetic",
+  "display_label": "Synthetic / BFCL-derived",
+  "ground_truth": ["mv a b"],
+  "provenance": {
+    "source_record_id": "multi_turn_base_0",
+    "source_revision": "ea13468e4423454d0c213704fb87cf7cb3990433",
+    "retrieved_at": "2026-09-01T16:45:00Z",
+    "license": "Apache-2.0",
+    "attribution": "Berkeley Function Calling Leaderboard.",
+    "raw_questions_sha256": "sha256:a3f1a3f1a3f1a3f1a3f1a3f1a3f1a3f1a3f1a3f1a3f1a3f1a3f1a3f1a3f1a3f1",
+    "raw_possible_answers_sha256": "sha256:b7c2b7c2b7c2b7c2b7c2b7c2b7c2b7c2b7c2b7c2b7c2b7c2b7c2b7c2b7c2b7c2"
+  }
+}

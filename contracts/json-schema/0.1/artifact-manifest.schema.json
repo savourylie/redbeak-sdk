@@ -27,6 +27,7 @@
       "enum": [
         "raw_source",
         "normalized_scenario",
+        "expected_evidence",
         "run_manifest",
         "turn_event",
         "raw_observation",

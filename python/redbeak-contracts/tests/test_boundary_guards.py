@@ -29,7 +29,14 @@ def test_every_schema_declares_its_boundary() -> None:
 
 def test_boundary_split_is_what_the_architecture_says() -> None:
     internal = {n for n in ALL_SCHEMAS if rc.boundary_of(n) == "internal"}
-    assert internal == {"run-manifest", "evaluation-result", "artifact-manifest"}
+    assert internal == {
+        "artifact-manifest",
+        "dataset-version",
+        "evaluation-result",
+        "expected-evidence",
+        "normalized-scenario",
+        "run-manifest",
+    }
 
 
 @pytest.mark.parametrize("name", RUNNER_FACING)
