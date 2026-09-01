@@ -1,0 +1,61 @@
+{
+  "data_classification": "synthetic",
+  "display_label": "Synthetic / BFCL-derived",
+  "external_id": "multi_turn_base_3",
+  "outcome_assertions": {
+    "fact_names": ["FileExists"]
+  },
+  "provenance": {
+    "raw_possible_answers_sha256": "sha256:6ea6bf48a2fc6067b57a289d314e7dc0582b12e22be53c8f7681599fba84a028",
+    "raw_questions_sha256": "sha256:fe5c442849bdb2c2cdedc91f377411ff7fc6cd11af299766f4554d71d3d40f98",
+    "source_record_id": "multi_turn_base_3",
+    "source_revision": "ea13468e4423454d0c213704fb87cf7cb3990433"
+  },
+  "response_assertions": [
+    {
+      "expected_calls": [
+        {
+          "arguments": {
+            "name": "test",
+            "path": "."
+          },
+          "function": "find"
+        }
+      ],
+      "sequence": 0
+    },
+    {
+      "expected_calls": [
+        {
+          "arguments": {
+            "folder": "projects"
+          },
+          "function": "cd"
+        },
+        {
+          "arguments": {
+            "folder": "photography"
+          },
+          "function": "cd"
+        },
+        {
+          "arguments": {
+            "destination": "backup_tests",
+            "source": "test_image1.jpg"
+          },
+          "function": "cp"
+        },
+        {
+          "arguments": {
+            "destination": "backup_tests",
+            "source": "test_document.txt"
+          },
+          "function": "cp"
+        }
+      ],
+      "sequence": 1
+    }
+  ],
+  "schema_version": "0.1",
+  "user_turn_count": 2
+}

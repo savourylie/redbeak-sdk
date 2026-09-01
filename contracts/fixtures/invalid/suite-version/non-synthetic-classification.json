@@ -1,0 +1,69 @@
+{
+  "case_count": 4,
+  "case_manifest_sha256": "sha256:8a8d5bf0e6f90f36e3731f9fd76ceec0912aabf279f0208b9492e6985c26cc36",
+  "cases": [
+    {
+      "domain": "gorilla_file_system",
+      "external_id": "multi_turn_base_3",
+      "scenario_sha256": "sha256:770c6ec0c6c87e6882c3ca9632a7990deb315c1b6d6c8a60b6789bc71dbb0200",
+      "selection_stratum": "single_short"
+    },
+    {
+      "domain": "trading_bots",
+      "external_id": "multi_turn_base_100",
+      "scenario_sha256": "sha256:f5f539865955805d18649bbb9f6b2f4767628413a8b04b84655a79a2c98e636a",
+      "selection_stratum": "single_short"
+    },
+    {
+      "domain": "travel_booking",
+      "external_id": "multi_turn_base_150",
+      "scenario_sha256": "sha256:2e3be5f6e45eda67f8f0e203f9268abb8c97b98b4f2439fed995838a7d7d75f7",
+      "selection_stratum": "single_short"
+    },
+    {
+      "domain": "vehicle_control",
+      "external_id": "multi_turn_base_50",
+      "scenario_sha256": "sha256:3c3522f26e7aa3a8f0a6ed59fba9169fc9a1c327f80b2bbc2cde0fb2395e4ee9",
+      "selection_stratum": "single_short"
+    }
+  ],
+  "compatibility": {
+    "case_manifest_sha256": "sha256:8a8d5bf0e6f90f36e3731f9fd76ceec0912aabf279f0208b9492e6985c26cc36",
+    "compatibility_key": "sha256:03420bf21702111e1edbaa463d49b17224fba1fc49a4c80f7f915c38be255b22",
+    "contract_version": "0.1",
+    "dataset_version_id": "594730bc-a854-5961-9260-0447ecb7db47",
+    "evaluator_version": "0.1.0",
+    "failure_taxonomy_version": "0.1.0"
+  },
+  "data_classification": "customer",
+  "dataset": {
+    "content_sha256": "sha256:d274222a7da3e81ccd7670b1ab7575414581cd2e390793e548579b072e9570df",
+    "dataset_id": "9e1db7ea-05c7-5d10-a187-2a9ed7ab7e07",
+    "dataset_slug": "bfcl_v3_base",
+    "dataset_version_id": "594730bc-a854-5961-9260-0447ecb7db47",
+    "source_revision": "ea13468e4423454d0c213704fb87cf7cb3990433",
+    "version": "0.1.0"
+  },
+  "display_label": "Synthetic / BFCL-derived",
+  "domains": ["gorilla_file_system", "trading_bots", "travel_booking", "vehicle_control"],
+  "evaluator_contract": {
+    "assertion_kinds": ["response", "outcome"],
+    "evaluator_version": "0.1.0",
+    "failure_taxonomy_version": "0.1.0",
+    "fixture_sha256": "sha256:3ac6c1cb56fac8133412515d1c86772fcd2f0c47155a6da2b2d49baae4554411",
+    "fixture_storage_ref": "private/evaluator-fixtures.jsonl"
+  },
+  "schema_version": "0.1",
+  "selection": {
+    "description": "Per domain, a 2x2 stratification over conversation depth and cross-service reach: the shortest and the longest single-service case, then the shortest and the longest case that also involves an auxiliary mock service. Ties break on the lowest numeric external id. Computed from turn count and involved_classes only, both of which are runner-visible, so the rule discloses nothing the runner may not already see.",
+    "feature_basis": "runner_visible",
+    "review_note": "Reviewed for the first local checkpoint. One case per domain, taken as the single-service shallowest stratum of the reviewed demo suite, so the checkpoint set is a strict subset of the demo set and proves the runner, adapter, golden target, and artifact path on the least complex case available in each domain.",
+    "reviewed_at": "2026-09-01T00:00:00Z",
+    "rule": "stratified_depth_cross_api",
+    "rule_version": "1.0.0"
+  },
+  "suite_id": "fac589b0-5631-52b9-8208-6b1f3dd8b623",
+  "suite_slug": "bfcl_walking_skeleton",
+  "suite_version_id": "aef7e4ee-9941-5d2a-a1c6-163e8f8fe76d",
+  "version": "0.1.0"
+}

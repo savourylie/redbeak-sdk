@@ -33,9 +33,11 @@ def test_boundary_split_is_what_the_architecture_says() -> None:
         "artifact-manifest",
         "dataset-version",
         "evaluation-result",
+        "evaluator-fixture",
         "expected-evidence",
         "normalized-scenario",
         "run-manifest",
+        "suite-version",
     }
 
 
