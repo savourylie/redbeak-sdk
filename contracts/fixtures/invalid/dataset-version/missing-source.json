@@ -1,0 +1,25 @@
+{
+  "schema_version": "0.1",
+  "dataset_id": "4c7e5d35-7f06-4084-a123-5e9f1a4d7ca3",
+  "dataset_version_id": "8a3c1b79-b34a-44c8-a567-9c3d5e81b0e7",
+  "dataset_slug": "bfcl_v3_base",
+  "version": "0.1.0",
+  "content_sha256": "sha256:a3f1a3f1a3f1a3f1a3f1a3f1a3f1a3f1a3f1a3f1a3f1a3f1a3f1a3f1a3f1a3f1",
+  "record_count": 200,
+  "domains": ["gorilla_file_system"],
+  "data_classification": "synthetic",
+  "display_label": "Synthetic / BFCL-derived",
+  "artifacts": [
+    {
+      "schema_version": "0.1",
+      "artifact_id": "9b2d0c8a-c45b-45d9-b678-ad4e6f92c1f8",
+      "sha256": "sha256:b7c2b7c2b7c2b7c2b7c2b7c2b7c2b7c2b7c2b7c2b7c2b7c2b7c2b7c2b7c2b7c2",
+      "media_type": "application/jsonl",
+      "size_bytes": 1,
+      "role": "normalized_scenario",
+      "produced_by": "importer",
+      "data_classification": "synthetic",
+      "created_at": "2026-09-01T16:45:00Z"
+    }
+  ]
+}

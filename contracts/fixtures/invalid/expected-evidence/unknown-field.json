@@ -1,0 +1,17 @@
+{
+  "schema_version": "0.1",
+  "external_id": "multi_turn_base_0",
+  "data_classification": "synthetic",
+  "display_label": "Synthetic / BFCL-derived",
+  "rubric": "mentions Archived",
+  "expected_evidence": {
+    "tool_path": ["GorillaFileSystem.mv"],
+    "per_turn_calls": [["mv(source='a', destination='b')"]]
+  },
+  "provenance": {
+    "source_record_id": "multi_turn_base_0",
+    "source_revision": "ea13468e4423454d0c213704fb87cf7cb3990433",
+    "raw_questions_sha256": "sha256:a3f1a3f1a3f1a3f1a3f1a3f1a3f1a3f1a3f1a3f1a3f1a3f1a3f1a3f1a3f1a3f1",
+    "raw_possible_answers_sha256": "sha256:b7c2b7c2b7c2b7c2b7c2b7c2b7c2b7c2b7c2b7c2b7c2b7c2b7c2b7c2b7c2b7c2"
+  }
+}
