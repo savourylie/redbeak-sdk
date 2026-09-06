@@ -35,6 +35,9 @@ class Checkpoint:
     pending_turn_idempotency_key: str | None
     pending_complete_idempotency_key: str | None
     phase: Phase
+    # The exact semantic request must survive a crash after server acceptance
+    # but before its response reaches us. It is private state, not evidence.
+    pending_submission: dict[str, Any] | None = None
 
     def to_dict(self) -> dict[str, Any]:
         return {
@@ -49,6 +52,7 @@ class Checkpoint:
             "pending_turn_idempotency_key": self.pending_turn_idempotency_key,
             "pending_complete_idempotency_key": self.pending_complete_idempotency_key,
             "phase": self.phase,
+            "pending_submission": self.pending_submission,
         }
 
     @classmethod
@@ -86,6 +90,7 @@ class Checkpoint:
                 document.get("pending_complete_idempotency_key")
             ),
             phase=phase,
+            pending_submission=_optional_object(document.get("pending_submission")),
         )
 
 
@@ -111,7 +116,12 @@ def save_checkpoint(directory: Path, checkpoint: Checkpoint) -> None:
     path = checkpoint_path(directory)
     tmp = path.with_suffix(".tmp")
     payload = json.dumps(checkpoint.to_dict(), indent=2, sort_keys=True)
-    tmp.write_text(payload + "\n", encoding="utf-8")
+    # The temporary file also contains a lease capability, so restrict it before
+    # writing any bytes (including a leftover temp file from an interrupted save).
+    descriptor = os.open(tmp, os.O_WRONLY | os.O_CREAT | os.O_TRUNC, 0o600)
+    with os.fdopen(descriptor, "w", encoding="utf-8") as stream:
+        os.fchmod(stream.fileno(), 0o600)
+        stream.write(payload + "\n")
     os.replace(tmp, path)
     with suppress(OSError):
         os.chmod(path, 0o600)

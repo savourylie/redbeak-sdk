@@ -202,10 +202,6 @@ async def _run_case(
     parent_ids: list[str] = []
     capabilities = await adapter.capabilities()
     try:
-        await adapter.reset(context)
-        if replay_submitted:
-            for item in checkpoint.submitted_inputs:
-                await adapter.send(UserInput.from_dict(item), context)
         if checkpoint.phase == "complete":
             accepted = await _complete(
                 config=config,
@@ -217,14 +213,19 @@ async def _run_case(
                 capabilities_version=capabilities.adapter_version,
                 parent_ids=tuple(parent_ids),
                 extra_observations=[],
+                hooks=hooks,
             )
-            await adapter.close(context)
             clear_checkpoint(config.checkpoint_dir)
             return CaseResult(
                 case_execution_id=checkpoint.case_execution_id,
                 status=str(accepted["status"]),
                 sequences=tuple(range(len(checkpoint.submitted_inputs))),
             )
+
+        await adapter.reset(context)
+        if replay_submitted:
+            for item in checkpoint.submitted_inputs:
+                await adapter.send(UserInput.from_dict(item), context)
 
         current = checkpoint
         while True:
@@ -252,7 +253,9 @@ async def _run_case(
                 )
                 save_checkpoint(config.checkpoint_dir, current)
                 await hooks.after_persist(current)
-            submission = {
+            # Replaying inputs restores adapter state, but the already prepared
+            # output/observations/timing must not change under an idempotency key.
+            submission = current.pending_submission or {
                 "schema_version": CONTRACT_VERSION,
                 "lease_token": current.lease_token,
                 "sequence": user_input.sequence,
@@ -266,6 +269,10 @@ async def _run_case(
                     "adapter_version": capabilities.adapter_version,
                 },
             }
+            if current.pending_submission is None:
+                current = _replace(current, pending_submission=submission)
+                save_checkpoint(config.checkpoint_dir, current)
+                await hooks.after_persist(current)
             next_action = await client.submit_turn(current.case_execution_id, submission)
             turn_manifest = artifacts.write_turn(
                 run_id=str(assignment["run_id"]),
@@ -296,6 +303,7 @@ async def _run_case(
                         next_action.get("observation_request")
                     ),
                     pending_turn_idempotency_key=new_uuid(),
+                    pending_submission=None,
                     phase="turn",
                 )
                 save_checkpoint(config.checkpoint_dir, current)
@@ -314,10 +322,9 @@ async def _run_case(
                 pending_observation_request=None,
                 pending_turn_idempotency_key=None,
                 pending_complete_idempotency_key=complete_key,
+                pending_submission=None,
                 phase="complete",
             )
-            save_checkpoint(config.checkpoint_dir, current)
-            await hooks.after_persist(current)
             status = "canceled" if action == "cancel" else "completed"
             accepted = await _complete(
                 config=config,
@@ -331,6 +338,7 @@ async def _run_case(
                 extra_observations=extra,
                 status=status,
                 cancel_reason=cancel_reason,
+                hooks=hooks,
             )
             await adapter.close(context)
             clear_checkpoint(config.checkpoint_dir)
@@ -363,9 +371,9 @@ async def _run_case(
         failed = _replace(
             checkpoint,
             pending_complete_idempotency_key=complete_key,
+            pending_submission=None,
             phase="complete",
         )
-        save_checkpoint(config.checkpoint_dir, failed)
         with suppress(LeaseLostError):
             await _complete(
                 config=config,
@@ -379,6 +387,7 @@ async def _run_case(
                 extra_observations=[],
                 status="execution_failed",
                 error=error.to_dict(),
+                hooks=hooks,
             )
         await _close_quietly(adapter, context)
         clear_checkpoint(config.checkpoint_dir)
@@ -400,6 +409,7 @@ async def _complete(
     capabilities_version: str,
     parent_ids: tuple[str, ...],
     extra_observations: list[dict[str, Any]],
+    hooks: LoopHooks,
     status: str = "completed",
     cancel_reason: str | None = None,
     error: dict[str, Any] | None = None,
@@ -422,6 +432,15 @@ async def _complete(
         body["cancel_reason"] = cancel_reason
     if error is not None:
         body["error"] = error
+    if checkpoint.pending_submission is not None:
+        body = checkpoint.pending_submission
+    else:
+        prepared = _replace(checkpoint, pending_submission=body)
+        save_checkpoint(
+            config.checkpoint_dir,
+            prepared,
+        )
+        await hooks.after_persist(prepared)
     accepted = await client.complete(checkpoint.case_execution_id, body)
     artifacts.write_completion(
         run_id=str(checkpoint.assignment["run_id"]),
