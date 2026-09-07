@@ -8,9 +8,18 @@ types, so the two cannot drift into disagreeing about what the wire accepts.
 ```text
 contracts/
 ├── json-schema/0.1/   21 schemas, including the shared definitions
-├── openapi/           the four-endpoint runner surface
+├── openapi/           runner-0.1.yaml, the four-endpoint runner surface,
+│                      and cli-0.1.yaml, the separate CLI control-plane surface
 └── fixtures/          valid and invalid examples consumed by both languages
 ```
+
+`json-schema/0.1/` and `openapi/runner-0.1.yaml` are the frozen runner contract,
+and everything below describes them. `openapi/cli-0.1.yaml` is a **different**
+surface, versioned `cli 0.1`: the control-plane API the local CLI uses to create
+and read Runs. It is authenticated by a CLI token rather than a runner key, its
+payloads never cross into a customer runner, and it defines its schemas inline
+rather than here — which is what keeps the boundary and secret guards below
+applying to exactly the payloads they were written for.
 
 ## What the contract guarantees
 

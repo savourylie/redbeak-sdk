@@ -1,0 +1,359 @@
+openapi: 3.1.0
+
+info:
+  title: Redbeak CLI Control-Plane API
+  version: '0.1'
+  summary: Control-plane surface used by the local Redbeak CLI to create and read Runs.
+  description: |
+    This is **not** the runner protocol. `runner-0.1.yaml` describes the frozen
+    outbound protocol — claim, turn, complete, heartbeat — and TAI-200 leaves it
+    unchanged. This document describes a separate, separately versioned surface
+    for the local CLI, so that adding Run creation does not widen the contract a
+    customer-side runner speaks.
+
+    Three properties define the boundary here:
+
+    1. **A different credential.** Requests carry a project-scoped CLI token
+      (`rbc_…`), never a runner key. A runner key presented here is rejected, and
+      a CLI token presented to `/v1/*` is rejected, so neither class can perform
+      the other's operations. Both are stored as hashes and are independently
+      revocable.
+    2. **No evaluation data, in either direction.** Requests name immutable
+      version pins; responses carry lifecycle state and counts. Scenario content,
+      ground truth, expected outcomes, rubrics, thresholds and verdicts never
+      appear. Analysis is read in Redbeak, not returned here.
+    3. **Creation is idempotent.** `attemptId` binds one attempt to one Run, so a
+      retry after a lost response returns the original Run instead of creating a
+      second one. It is the same `run_requests` record the dashboard writes.
+
+    Run creation is the same validated persistence path the dashboard uses. A
+    Run records which entry point created it (`web` or `cli`) and is attributed
+    to the Project owner in both cases.
+
+    Because these payloads do not cross the runner boundary, they are defined
+    inline here rather than in `contracts/json-schema/0.1/`, which remains the
+    single source of truth for the frozen runner wire contract and keeps its
+    boundary and secret guards intact.
+  license:
+    name: UNLICENSED
+  contact:
+    name: TaiwanEval
+
+servers:
+  - url: http://127.0.0.1:3000
+    description: Local development
+
+security:
+  - cliToken: []
+
+paths:
+  /cli/v1/projects/{projectId}/versions:
+    get:
+      operationId: listVersions
+      summary: List the immutable SuiteVersions and TargetVersions a Run can pin.
+      description: |
+        Lets the CLI resolve a human-readable slug and version into an exact
+        immutable ID, so a Run never has to be created against "whatever is
+        newest". Returns only identity and size metadata: no cases, no scenario
+        content, no evaluator fixtures.
+      parameters: [{ $ref: '#/components/parameters/projectId' }]
+      responses:
+        '200':
+          description: The versions visible to this token's Project.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/VersionCatalogue' }
+        '401': { $ref: '#/components/responses/Rejected' }
+        '404': { $ref: '#/components/responses/Rejected' }
+
+  /cli/v1/projects/{projectId}/runs:
+    post:
+      operationId: createRun
+      summary: Create a Run, optionally with a Run-bound execution grant.
+      description: |
+        Pins one SuiteVersion and one TargetVersion and queues every case of the
+        suite. Selectors may be exact IDs, or a slug/name with an optional
+        version; an unknown or ambiguous selector is refused rather than
+        silently resolved.
+
+        With `execute: true` the response also carries a short-lived credential
+        bound to this Run. It is an ordinary runner key restricted to one Run, so
+        a local `create --execute` cannot claim another Run's queued cases. The
+        caller is expected to release it when the command finishes; it also
+        expires on its own.
+      parameters: [{ $ref: '#/components/parameters/projectId' }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/CreateRunRequest' }
+      responses:
+        '201':
+          description: |
+            The Run exists and is queued. `reused` is true when this attempt had
+            already created it, in which case no second Run was created.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/CreatedRun' }
+        '400': { $ref: '#/components/responses/Rejected' }
+        '401': { $ref: '#/components/responses/Rejected' }
+        '404': { $ref: '#/components/responses/Rejected' }
+        '409':
+          description: |
+            `attempt_conflict` when this attempt already created a Run for a
+            different pinning, or `*_ambiguous` when a selector matched more
+            than one version.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Error' }
+
+  /cli/v1/projects/{projectId}/runs/{runId}:
+    get:
+      operationId: getRun
+      summary: Read a Run's lifecycle state.
+      description: |
+        Distinguishes execution from analysis. `evaluating` means raw evidence
+        was submitted and Redbeak is analysing it; `completed` means analysis is
+        published. No verdict, score or item result is returned here — those are
+        read in Redbeak.
+      parameters:
+        - { $ref: '#/components/parameters/projectId' }
+        - { $ref: '#/components/parameters/runId' }
+      responses:
+        '200':
+          description: Current state and case counts.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/RunStatus' }
+        '401': { $ref: '#/components/responses/Rejected' }
+        '404': { $ref: '#/components/responses/Rejected' }
+
+  /cli/v1/projects/{projectId}/execution-grants/{keyId}/revoke:
+    post:
+      operationId: revokeExecutionGrant
+      summary: Release a Run-bound execution grant.
+      description: |
+        Ends the grant's access immediately. Only a Run-bound grant can be
+        revoked here; ordinary Project runner keys are managed in the dashboard.
+      parameters:
+        - { $ref: '#/components/parameters/projectId' }
+        - name: keyId
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { type: object, additionalProperties: false }
+      responses:
+        '200':
+          description: The grant is revoked.
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: false
+                required: [schemaVersion, revoked]
+                properties:
+                  schemaVersion: { const: '0.1' }
+                  revoked: { const: true }
+        '401': { $ref: '#/components/responses/Rejected' }
+        '404': { $ref: '#/components/responses/Rejected' }
+
+components:
+  securitySchemes:
+    cliToken:
+      type: http
+      scheme: bearer
+      description: |
+        A project-scoped CLI token, `rbc_<16 hex>.<43 url-safe characters>`. It
+        authorises Run creation and Run reads in exactly one Project. It cannot
+        claim work, submit a turn, complete a case or send a heartbeat, and it is
+        never accepted by `/v1/*`. It is stored only as a hash and is revocable
+        from Project settings.
+
+  parameters:
+    projectId:
+      name: projectId
+      in: path
+      required: true
+      schema: { type: string, format: uuid }
+      description: Must match the token's Project; another Project answers 404.
+    runId:
+      name: runId
+      in: path
+      required: true
+      schema: { type: string, format: uuid }
+
+  responses:
+    Rejected:
+      description: |
+        The request was refused. Codes are a closed set and messages are never
+        echoed from the server, because an exception can carry SQL bind values,
+        tokens or raw configuration.
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/Error' }
+
+  schemas:
+    Error:
+      type: object
+      additionalProperties: false
+      required: [schemaVersion, code, requestId]
+      properties:
+        schemaVersion: { const: '0.1' }
+        code:
+          type: string
+          enum:
+            - unauthorized
+            - not_found
+            - invalid_request
+            - attempt_conflict
+            - suite_version_not_found
+            - suite_version_ambiguous
+            - target_version_not_found
+            - target_version_ambiguous
+            - too_many_attempts
+            - request_rejected
+            - service_unavailable
+        requestId: { type: string, format: uuid }
+
+    SuiteChoice:
+      type: object
+      additionalProperties: false
+      required: [id, slug, version, caseCount, domains]
+      properties:
+        id: { type: string, format: uuid }
+        slug: { type: string }
+        version: { type: string }
+        caseCount: { type: integer, minimum: 0 }
+        domains: { type: array, items: { type: string } }
+
+    TargetChoice:
+      type: object
+      additionalProperties: false
+      required: [id, name, version, adapterVersion]
+      properties:
+        id: { type: string, format: uuid }
+        name: { type: string }
+        version: { type: string }
+        adapterVersion:
+          type: string
+          description: Claim routing uses this together with the target version.
+
+    VersionCatalogue:
+      type: object
+      additionalProperties: false
+      required: [schemaVersion, projectId, suites, targets]
+      properties:
+        schemaVersion: { const: '0.1' }
+        projectId: { type: string, format: uuid }
+        suites: { type: array, items: { $ref: '#/components/schemas/SuiteChoice' } }
+        targets: { type: array, items: { $ref: '#/components/schemas/TargetChoice' } }
+
+    CreateRunRequest:
+      type: object
+      additionalProperties: false
+      required: [attemptId]
+      description: |
+        Supply exactly one selector per side: either the exact version ID, or a
+        slug/name with an optional version pin.
+      properties:
+        attemptId:
+          type: string
+          format: uuid
+          description: |
+            Idempotency key for creation. Reusing it returns the original Run;
+            reusing it with a different pinning is `attempt_conflict`.
+        suite: { type: string, description: Suite slug. }
+        suiteVersion: { type: string }
+        suiteVersionId: { type: string, format: uuid }
+        target: { type: string, description: Registered Target name. }
+        targetVersion: { type: string }
+        targetVersionId: { type: string, format: uuid }
+        execute:
+          type: boolean
+          default: false
+          description: Also issue a Run-bound execution grant.
+
+    ExecutionGrant:
+      type: object
+      additionalProperties: false
+      required: [keyId, value, runId, expiresInSeconds]
+      description: |
+        A short-lived runner credential restricted to one Run. It is returned
+        once, at creation, and is not retrievable afterwards. It is deliberately
+        outside `contracts/json-schema/0.1/`, whose secret guard allows only
+        `lease_token`: this grant follows the same reasoning — a scoped,
+        short-lived capability rather than a credential at rest — but it does not
+        travel on the runner wire, so that guard is left unwidened.
+      properties:
+        keyId: { type: string, format: uuid }
+        value: { type: string, description: 'Bearer value; never logged or persisted in evidence.' }
+        runId: { type: string, format: uuid }
+        expiresInSeconds: { type: integer, minimum: 1 }
+
+    CreatedRun:
+      type: object
+      additionalProperties: false
+      required: [schemaVersion, runId, projectId, reused, url, suite, target]
+      properties:
+        schemaVersion: { const: '0.1' }
+        runId: { type: string, format: uuid }
+        projectId: { type: string, format: uuid }
+        reused:
+          type: boolean
+          description: True when this attempt had already created the Run.
+        url:
+          type: string
+          description: Where to read progress and analysis in Redbeak.
+        suite:
+          type: object
+          additionalProperties: false
+          required: [id, slug, version, caseCount]
+          properties:
+            id: { type: string, format: uuid }
+            slug: { type: string }
+            version: { type: string }
+            caseCount: { type: integer, minimum: 0 }
+        target: { $ref: '#/components/schemas/TargetChoice' }
+        execution:
+          description: Present only when `execute` was requested; null if it could not be issued.
+          oneOf:
+            - { $ref: '#/components/schemas/ExecutionGrant' }
+            - { type: 'null' }
+        executionError:
+          type: string
+          enum: [execution_grant_unavailable]
+          description: |
+            The Run was created and is queued, but no grant was issued. Reported
+            rather than hidden, so the Run is not silently orphaned.
+
+    RunStatus:
+      type: object
+      required: [schemaVersion, id, state, url]
+      description: |
+        Lifecycle only. `progress.states` counts CaseExecutions per state; it
+        carries no verdict, score or item result.
+      properties:
+        schemaVersion: { const: '0.1' }
+        id: { type: string, format: uuid }
+        projectId: { type: string, format: uuid }
+        state:
+          type: string
+          enum: [draft, queued, running, evaluating, completed, failed, canceled]
+        url: { type: string }
+        caseCount: { type: integer, minimum: 0 }
+        queuedAt: { type: string }
+        startedAt: { type: string }
+        completedAt: { type: string }
+        suite: { type: object }
+        target: { type: object }
+        classification: { type: string }
+        progress:
+          type: object
+          additionalProperties: false
+          properties:
+            total: { type: integer, minimum: 0 }
+            states: { type: object, additionalProperties: { type: integer } }
