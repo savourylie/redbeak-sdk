@@ -42,15 +42,28 @@ class CaseResult:
     case_execution_id: str
     status: str
     sequences: tuple[int, ...]
+    run_id: str = ""
 
 
 @dataclass
 class RunResult:
     cases: list[CaseResult] = field(default_factory=list)
+    #: True when the loop stopped because it was asked to, not because it idled.
+    stopped: bool = False
 
     @property
     def case_ids(self) -> list[str]:
         return [item.case_execution_id for item in self.cases]
+
+    @property
+    def run_ids(self) -> list[str]:
+        """Distinct Runs this loop actually executed, in first-seen order."""
+
+        seen: list[str] = []
+        for item in self.cases:
+            if item.run_id and item.run_id not in seen:
+                seen.append(item.run_id)
+        return seen
 
 
 class LoopHooks:
@@ -68,11 +81,21 @@ async def run_until_idle(
     client: RunnerClient,
     artifacts: ArtifactStore,
     hooks: LoopHooks | None = None,
+    stop: asyncio.Event | None = None,
 ) -> RunResult:
-    """Drain queued work, honouring a leftover checkpoint first."""
+    """Drain queued work, honouring a leftover checkpoint first.
+
+    ``config.until_idle`` drains the queue and returns when the server reports no
+    work; ``--once`` executes a single case. ``config.wait`` keeps claiming after
+    an idle response, with bounded backoff, so an already-running runner accepts a
+    Run created later. ``stop`` ends wait mode between cases and during a backoff
+    sleep; a case already leased is never abandoned mid-turn.
+    """
 
     seam = hooks or LoopHooks()
     result = RunResult()
+    halt = stop or asyncio.Event()
+    backoff = config.poll_min_s
     leftover = load_checkpoint(config.checkpoint_dir)
     if leftover is not None:
         case = await _resume_case(
@@ -87,6 +110,9 @@ async def run_until_idle(
             result.cases.append(case)
 
     while True:
+        if halt.is_set():
+            result.stopped = True
+            break
         capabilities = await adapter.capabilities()
         claim = {
             "schema_version": CONTRACT_VERSION,
@@ -103,7 +129,17 @@ async def run_until_idle(
                 config.runner_id,
                 response.get("retry_after_ms"),
             )
+            if not config.wait:
+                break
+            backoff = _next_backoff(backoff, response.get("retry_after_ms"), config)
+            logger.info("waiting for work runner_id=%s next_poll_s=%s", config.runner_id, backoff)
+            try:
+                await asyncio.wait_for(halt.wait(), timeout=backoff)
+            except TimeoutError:
+                continue
+            result.stopped = True
             break
+        backoff = config.poll_min_s
         assignment = response["assignment"]
         lease = response["lease"]
         logger.info(
@@ -141,6 +177,15 @@ async def run_until_idle(
         if not config.until_idle:
             break
     return result
+
+
+def _next_backoff(current: float, retry_after_ms: Any, config: RunnerConfig) -> float:
+    """Bounded backoff. The server's hint is honoured but never unbounded."""
+
+    requested = config.poll_min_s
+    if isinstance(retry_after_ms, int | float) and retry_after_ms > 0:
+        requested = float(retry_after_ms) / 1000.0
+    return max(config.poll_min_s, min(config.poll_max_s, max(requested, current * 2)))
 
 
 async def _resume_case(
@@ -220,6 +265,7 @@ async def _run_case(
                 case_execution_id=checkpoint.case_execution_id,
                 status=str(accepted["status"]),
                 sequences=tuple(range(len(checkpoint.submitted_inputs))),
+                run_id=str(assignment["run_id"]),
             )
 
         await adapter.reset(context)
@@ -346,6 +392,7 @@ async def _run_case(
                 case_execution_id=current.case_execution_id,
                 status=str(accepted["status"]),
                 sequences=tuple(sequences),
+                run_id=str(assignment["run_id"]),
             )
         await adapter.close(context)
         clear_checkpoint(config.checkpoint_dir)
@@ -395,6 +442,7 @@ async def _run_case(
             case_execution_id=checkpoint.case_execution_id,
             status="recorded",
             sequences=tuple(sequences),
+            run_id=str(assignment["run_id"]),
         )
 
 

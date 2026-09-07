@@ -11,8 +11,9 @@ from __future__ import annotations
 
 import logging
 import re
+import sys
 from collections.abc import Mapping
-from typing import Any
+from typing import IO, Any
 
 _SECRET_PATTERNS = (
     re.compile(r"rbk_[A-Za-z0-9_-]+"),
@@ -92,13 +93,36 @@ class RedactingFilter(logging.Filter):
         return True
 
 
+class _StderrHandler(logging.StreamHandler):  # type: ignore[type-arg]
+    """Resolve ``sys.stderr`` at emit time rather than at construction.
+
+    A plain ``StreamHandler()`` captures whichever stream exists when the logger
+    is first configured. Anything that replaces ``sys.stderr`` afterwards — a
+    test harness, an embedding process — then leaves the handler writing to a
+    closed buffer, and Python prints a logging error and a traceback into the
+    output a person is reading. Operational logs must never become the noise.
+    """
+
+    def __init__(self) -> None:
+        super().__init__()
+
+    @property
+    def stream(self) -> IO[str]:
+        return sys.stderr
+
+    @stream.setter
+    def stream(self, value: IO[str]) -> None:
+        # StreamHandler.__init__ assigns the captured stream; ignore it.
+        return None
+
+
 def configure_logging(*, level: int = logging.INFO) -> logging.Logger:
     logger = logging.getLogger("redbeak.runner")
     logger.setLevel(level)
     if not any(isinstance(f, RedactingFilter) for f in logger.filters):
         logger.addFilter(RedactingFilter())
     if not logger.handlers:
-        handler = logging.StreamHandler()
+        handler: logging.Handler = _StderrHandler()
         handler.setFormatter(logging.Formatter("%(levelname)s %(name)s %(message)s"))
         handler.addFilter(RedactingFilter())
         logger.addHandler(handler)

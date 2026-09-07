@@ -22,6 +22,11 @@ class RunnerConfig:
     heartbeat_interval_s: float = 5.0
     max_retries: int = 3
     until_idle: bool = False
+    # Wait mode keeps an idle runner alive so a Run created later in the
+    # dashboard is picked up without restarting the process.
+    wait: bool = False
+    poll_min_s: float = 1.0
+    poll_max_s: float = 30.0
 
     def __repr__(self) -> str:
         return (
