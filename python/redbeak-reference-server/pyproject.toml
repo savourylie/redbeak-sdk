@@ -3,6 +3,10 @@ name = "redbeak-reference-server"
 version = "0.1.0"
 description = "In-memory OpenAPI stand-in for Redbeak runner tests. Not a customer install."
 requires-python = ">=3.11"
+# This package is never published. PyPI rejects any upload carrying this
+# classifier, so "test tool, not a customer install" is enforced at the index
+# rather than left to whoever runs the release. TAI-214.
+classifiers = ["Private :: Do Not Upload"]
 dependencies = [
     "redbeak-contracts",
     "redbeak-runner",
