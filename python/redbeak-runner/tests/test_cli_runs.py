@@ -17,6 +17,7 @@ from typing import Any
 import httpx
 import pytest
 from _runner_fixtures import CASE_A, PROJECT_ID, RUN_ID, NoteAdapter, two_turn_case
+from redbeak_reference_server import ReferenceServer, create_app
 from redbeak_runner import credentials as creds
 from redbeak_runner.artifacts import ArtifactStore
 from redbeak_runner.cli import app
@@ -25,7 +26,6 @@ from redbeak_runner.config import RunnerConfig
 from redbeak_runner.control_plane import ControlPlaneClient, ControlPlaneError
 from redbeak_runner.errors import ConfigurationError
 from redbeak_runner.loop import _next_backoff, run_until_idle
-from redbeak_runner.server import ReferenceServer, create_app
 from typer.testing import CliRunner
 
 runner = CliRunner()

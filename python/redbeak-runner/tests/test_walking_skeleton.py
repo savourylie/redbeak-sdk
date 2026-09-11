@@ -11,6 +11,7 @@ from redbeak_bfcl_demo.driver import fact_names_for, load_scenarios, load_suite
 from redbeak_bfcl_demo.golden import create_adapter
 from redbeak_bfcl_demo.importer import default_output_dir
 from redbeak_bfcl_demo.importer import stable_uuid as demo_uuid
+from redbeak_reference_server import QueuedCase, ReferenceServer, create_app
 from redbeak_runner.artifacts import ArtifactStore
 from redbeak_runner.checkpoint import Checkpoint
 from redbeak_runner.client import RunnerClient
@@ -18,7 +19,6 @@ from redbeak_runner.config import RunnerConfig
 from redbeak_runner.errors import RunnerCrash
 from redbeak_runner.ids import new_uuid
 from redbeak_runner.loop import LoopHooks, run_until_idle
-from redbeak_runner.server import QueuedCase, ReferenceServer, create_app
 
 WALKING = "bfcl_walking_skeleton"
 DOMAINS = {

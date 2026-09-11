@@ -3,9 +3,9 @@
 from __future__ import annotations
 
 from _runner_fixtures import CASE_A, PROJECT_ID, two_turn_case
+from redbeak_reference_server import ReferenceServer
 from redbeak_runner import CONTRACT_VERSION, RUNNER_VERSION
 from redbeak_runner.ids import new_uuid
-from redbeak_runner.server import ReferenceServer
 
 OTHER_PROJECT = "77777777-7777-4777-8777-777777777777"
 

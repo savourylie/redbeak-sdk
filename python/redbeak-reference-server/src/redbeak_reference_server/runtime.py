@@ -11,7 +11,6 @@ from typing import Any, Literal, Protocol
 
 import redbeak_contracts as rc
 from jsonschema.exceptions import ValidationError
-
 from redbeak_runner.ids import new_lease_token, new_runner_key, new_uuid
 
 CaseStatus = Literal["queued", "leased", "running", "submitted", "canceled"]
