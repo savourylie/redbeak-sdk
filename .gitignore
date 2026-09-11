@@ -1,0 +1,17 @@
+# Python
+.venv/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+*.egg-info/
+dist/
+build/
+
+# Local runner checkpoint and evidence
+.redbeak-runner/
+.redbeak/
+
+# OS / editor
+.DS_Store

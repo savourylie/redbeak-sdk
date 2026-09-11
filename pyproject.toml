@@ -1,0 +1,43 @@
+[project]
+name = "redbeak-sdk-workspace"
+version = "0.0.0"
+description = "Redbeak SDK workspace root (not published)"
+requires-python = ">=3.11"
+dependencies = [
+    "redbeak-contracts",
+    "redbeak-adapter-sdk",
+    "redbeak-runner",
+    "redbeak-reference-server",
+]
+
+[tool.uv]
+package = false
+
+[tool.uv.workspace]
+members = ["python/*"]
+
+[tool.uv.sources]
+redbeak-contracts = { workspace = true }
+redbeak-adapter-sdk = { workspace = true }
+redbeak-reference-server = { workspace = true }
+redbeak-runner = { workspace = true }
+
+[dependency-groups]
+dev = ["mypy>=1.13", "pytest>=8.3", "ruff>=0.8", "types-jsonschema>=4.23"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+extend-exclude = [".venv"]
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "N", "UP", "B", "SIM", "RUF"]
+
+[tool.mypy]
+python_version = "3.11"
+strict = true
+files = ["python"]
+
+[tool.pytest.ini_options]
+testpaths = ["python"]
+addopts = "-q"

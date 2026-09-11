@@ -1,0 +1,34 @@
+Redbeak SDK
+Copyright 2026 TaiwanEval
+
+This product includes software developed at TaiwanEval.
+
+Licensed under the Apache License, Version 2.0. See LICENSE for the full text.
+
+--------------------------------------------------------------------------------
+Third-party dependencies
+--------------------------------------------------------------------------------
+
+The packages in python/ depend on the following third-party software at runtime.
+Each remains under its own license; none of it is redistributed here.
+
+  jsonschema      MIT License         https://github.com/python-jsonschema/jsonschema
+  httpx           BSD 3-Clause        https://github.com/encode/httpx
+  typer           MIT License         https://github.com/fastapi/typer
+
+The test-only package python/redbeak-reference-server additionally depends on:
+
+  starlette       BSD 3-Clause        https://github.com/encode/starlette
+
+redbeak-reference-server is never published and is not part of any customer
+install. See its README for what it does and does not model.
+
+--------------------------------------------------------------------------------
+Derived data
+--------------------------------------------------------------------------------
+
+The fixtures under contracts/fixtures/ are synthetic. Where a fixture names a
+case identifier derived from the Berkeley Function Calling Leaderboard (BFCL)
+v3 Base dataset, it carries synthetic values rather than upstream ground truth.
+Nothing in this repository is official BFCL data, an accuracy measurement, a
+ranking, or a certification.
