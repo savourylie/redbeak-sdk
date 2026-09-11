@@ -1,19 +1,19 @@
 {
   "data_classification": "synthetic",
   "display_label": "Synthetic / BFCL-derived",
-  "external_id": "multi_turn_base_3",
+  "external_id": "synthetic_file_ops_2",
   "provenance": {
-    "raw_possible_answers_sha256": "sha256:6ea6bf48a2fc6067b57a289d314e7dc0582b12e22be53c8f7681599fba84a028",
-    "raw_questions_sha256": "sha256:fe5c442849bdb2c2cdedc91f377411ff7fc6cd11af299766f4554d71d3d40f98",
-    "source_record_id": "multi_turn_base_3",
-    "source_revision": "ea13468e4423454d0c213704fb87cf7cb3990433"
+    "raw_possible_answers_sha256": "sha256:b7c2b7c2b7c2b7c2b7c2b7c2b7c2b7c2b7c2b7c2b7c2b7c2b7c2b7c2b7c2b7c2",
+    "raw_questions_sha256": "sha256:a3f1a3f1a3f1a3f1a3f1a3f1a3f1a3f1a3f1a3f1a3f1a3f1a3f1a3f1a3f1a3f1",
+    "source_record_id": "synthetic_file_ops_2",
+    "source_revision": "0123456789abcdef0123456789abcdef01234567"
   },
   "response_assertions": [
     {
       "expected_calls": [
         {
           "arguments": {
-            "name": "test",
+            "name": "sample",
             "path": "."
           },
           "function": "find"
@@ -25,27 +25,27 @@
       "expected_calls": [
         {
           "arguments": {
-            "folder": "projects"
+            "folder": "workspace_one"
           },
           "function": "cd"
         },
         {
           "arguments": {
-            "folder": "photography"
+            "folder": "workspace_two"
           },
           "function": "cd"
         },
         {
           "arguments": {
-            "destination": "backup_tests",
-            "source": "test_image1.jpg"
+            "destination": "holding_area",
+            "source": "sample_alpha.txt"
           },
           "function": "cp"
         },
         {
           "arguments": {
-            "destination": "backup_tests",
-            "source": "test_document.txt"
+            "destination": "holding_area",
+            "source": "sample_beta.txt"
           },
           "function": "cp"
         }
