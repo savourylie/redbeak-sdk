@@ -18,15 +18,17 @@ import, mock services, demo targets, and scoring live elsewhere.
 
 ## CLI
 
+Customer-facing commands talk to a Redbeak Project over outbound HTTP:
+
 ```bash
-redbeak runner doctor --adapter redbeak_bfcl_demo.golden --reference-server
-redbeak runner start --adapter redbeak_bfcl_demo.golden --reference-server \
-  --work-file work.json --until-idle
+redbeak runner doctor --adapter your.adapter:Adapter --base-url https://app.example
+redbeak runner start --adapter your.adapter:Adapter --base-url https://app.example
 ```
 
-`--reference-server` serves the frozen OpenAPI contract in-process. That is the
-local stand-in for the SaaS control plane (TAI-162 / TAI-163), not a product
-deployment.
+`--reference-server` is a repository-test flag. It lazily imports
+`redbeak-reference-server`, an internal in-memory OpenAPI stand-in that never
+binds a socket. A customer `pip install redbeak-runner` does not include that
+package, a web framework, or an ASGI server.
 
 The four-case walking-skeleton checkpoint is:
 

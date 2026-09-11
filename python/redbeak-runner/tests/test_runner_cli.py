@@ -2,9 +2,12 @@
 
 from __future__ import annotations
 
+import builtins
 import json
 from pathlib import Path
+from typing import Any
 
+import pytest
 from _runner_fixtures import CASE_A, PROJECT_ID, RUN_ID, SCENARIO_A
 from redbeak_runner.cli import app
 from typer.testing import CliRunner
@@ -21,6 +24,25 @@ def test_doctor_loads_a_local_adapter() -> None:
     assert "adapter ok" in result.output
     assert "reference server ok" in result.output
     assert "rbk_live_" not in result.output
+
+
+def test_doctor_reference_server_requires_internal_package(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    real_import = builtins.__import__
+
+    def blocked(name: str, *args: Any, **kwargs: Any) -> Any:
+        if name == "redbeak_reference_server" or name.startswith("redbeak_reference_server."):
+            raise ImportError("blocked")
+        return real_import(name, *args, **kwargs)
+
+    monkeypatch.setattr(builtins, "__import__", blocked)
+    result = runner.invoke(
+        app,
+        ["runner", "doctor", "--adapter", "_runner_fixtures:NoteAdapter", "--reference-server"],
+    )
+    assert result.exit_code == 1, result.output
+    assert "repository test tool" in result.output
 
 
 def test_start_until_idle_with_work_file(tmp_path: Path) -> None:

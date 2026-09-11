@@ -3,9 +3,9 @@
 from __future__ import annotations
 
 from _runner_fixtures import CASE_A, PROJECT_ID, two_turn_case
+from redbeak_reference_server import QueuedCase, ReferenceServer
 from redbeak_runner import CONTRACT_VERSION, RUNNER_VERSION
 from redbeak_runner.ids import new_uuid
-from redbeak_runner.server import QueuedCase, ReferenceServer
 
 
 def test_duplicate_turn_submissions_create_one_event() -> None:

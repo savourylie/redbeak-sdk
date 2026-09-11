@@ -1,0 +1,17 @@
+[project]
+name = "redbeak-reference-server"
+version = "0.1.0"
+description = "In-memory OpenAPI stand-in for Redbeak runner tests. Not a customer install."
+requires-python = ">=3.11"
+dependencies = [
+    "redbeak-contracts",
+    "redbeak-runner",
+    "starlette>=0.41",
+]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/redbeak_reference_server"]

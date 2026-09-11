@@ -14,6 +14,7 @@ from _runner_fixtures import (
     run,
     two_turn_case,
 )
+from redbeak_reference_server import ReferenceServer, create_app
 from redbeak_runner.artifacts import ArtifactStore
 from redbeak_runner.checkpoint import Checkpoint, load_checkpoint
 from redbeak_runner.client import RunnerClient
@@ -21,7 +22,6 @@ from redbeak_runner.config import RunnerConfig
 from redbeak_runner.errors import RunnerCrash
 from redbeak_runner.ids import new_uuid
 from redbeak_runner.loop import LoopHooks, run_until_idle
-from redbeak_runner.server import ReferenceServer, create_app
 
 
 class CrashAfterFirstTurn(LoopHooks):

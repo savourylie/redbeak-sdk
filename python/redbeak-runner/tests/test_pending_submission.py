@@ -10,6 +10,7 @@ import httpx
 import pytest
 from _runner_fixtures import CASE_A, CREATED_AT, PROJECT_ID, NoteAdapter, run, two_turn_case
 from redbeak_adapter_sdk import AgentOutput, SessionContext, UserInput
+from redbeak_reference_server import ReferenceServer, create_app
 from redbeak_runner.artifacts import ArtifactStore
 from redbeak_runner.checkpoint import load_checkpoint
 from redbeak_runner.client import RunnerClient
@@ -17,7 +18,6 @@ from redbeak_runner.config import RunnerConfig
 from redbeak_runner.errors import RunnerCrash
 from redbeak_runner.ids import new_uuid
 from redbeak_runner.loop import run_until_idle
-from redbeak_runner.server import ReferenceServer, create_app
 
 
 class ChangingNote(NoteAdapter):

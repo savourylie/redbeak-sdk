@@ -91,7 +91,7 @@ def two_turn_case(
     second: str = "again",
     external_id: str = "note_case",
 ) -> Any:
-    from redbeak_runner.server import QueuedCase
+    from redbeak_reference_server import QueuedCase
 
     return QueuedCase(
         project_id=project_id,

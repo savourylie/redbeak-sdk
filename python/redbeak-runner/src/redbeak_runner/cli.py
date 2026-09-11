@@ -37,7 +37,6 @@ from redbeak_runner.control_plane import ControlPlaneClient
 from redbeak_runner.errors import ConfigurationError, RunnerError
 from redbeak_runner.log import configure_logging, get_logger
 from redbeak_runner.loop import run_until_idle
-from redbeak_runner.server import ReferenceServer, create_app, load_work_file
 
 app = typer.Typer(no_args_is_help=True, add_completion=False)
 runner_app = typer.Typer(no_args_is_help=True, add_completion=False)
@@ -52,6 +51,23 @@ def _now() -> str:
     return datetime.now(UTC).replace(microsecond=0).strftime("%Y-%m-%dT%H:%M:%SZ")
 
 
+def _reference_server() -> Any:
+    """Load the in-memory OpenAPI stand-in used by repository tests.
+
+    The shipped runner does not include this package. Customers talk to a
+    Redbeak Project over outbound HTTP.
+    """
+
+    try:
+        import redbeak_reference_server as reference
+    except ImportError as exc:
+        raise ConfigurationError(
+            "the in-memory reference server is a repository test tool; "
+            "pass --base-url for a Redbeak Project"
+        ) from exc
+    return reference
+
+
 @runner_app.command("doctor")
 def doctor(
     adapter: str = typer.Option(..., "--adapter", help="Import path of the target adapter."),
@@ -62,7 +78,9 @@ def doctor(
         None, "--runner-key", envvar="REDBEAK_RUNNER_KEY", help="Project-scoped runner key."
     ),
     reference_server: bool = typer.Option(
-        False, "--reference-server", help="Check against an in-memory OpenAPI server."
+        False,
+        "--reference-server",
+        help="Repository-test stand-in. Requires redbeak-reference-server.",
     ),
 ) -> None:
     """Validate adapter discovery, contract version, and authentication shape."""
@@ -78,9 +96,14 @@ def doctor(
     typer.echo(summary)
     log.info("%s", summary)
     if reference_server:
-        server = ReferenceServer()
+        try:
+            reference = _reference_server()
+        except ConfigurationError as exc:
+            typer.echo(_reason(exc), err=True)
+            raise typer.Exit(code=1) from exc
+        server = reference.ReferenceServer()
         key = runner_key or server.create_key("11111111-1111-4111-8111-111111111111")
-        http_app = create_app(server)
+        http_app = reference.create_app(server)
         payload = asyncio.run(_doctor_claim(http_app, key, capabilities.adapter_version))
         typer.echo(f"reference server ok status={payload['status']}")
         log.info("reference server ok status=%s", payload["status"])
@@ -112,10 +135,12 @@ def start(
         Path("artifacts/runner"), "--artifacts-dir", help="Item-level raw evidence directory."
     ),
     reference_server: bool = typer.Option(
-        False, "--reference-server", help="Serve the OpenAPI contract in-process."
+        False,
+        "--reference-server",
+        help="Repository-test stand-in. Requires redbeak-reference-server.",
     ),
     work_file: Path | None = typer.Option(
-        None, "--work-file", help="Queued cases for the reference server."
+        None, "--work-file", help="Queued cases for the repository-test stand-in."
     ),
     until_idle: bool = typer.Option(
         True,
@@ -219,15 +244,16 @@ async def _start(
 ) -> Any:
     adapter = load_adapter(adapter_spec)
     if reference_server:
-        server = ReferenceServer()
-        work = load_work_file(work_file) if work_file is not None else None
+        reference = _reference_server()
+        server = reference.ReferenceServer()
+        work = reference.load_work_file(work_file) if work_file is not None else None
         if work is not None:
             server.load_work(work)
             project_id = work.project_id
         else:
             project_id = "11111111-1111-4111-8111-111111111111"
         key = runner_key or server.create_key(project_id)
-        http_app = create_app(server)
+        http_app = reference.create_app(server)
         transport = httpx.ASGITransport(app=http_app)
         async with httpx.AsyncClient(transport=transport, base_url="http://redbeak.local") as http:
             return await _run_with_client(

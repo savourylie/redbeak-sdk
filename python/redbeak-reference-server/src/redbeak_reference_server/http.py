@@ -10,7 +10,7 @@ from starlette.requests import Request
 from starlette.responses import JSONResponse, Response
 from starlette.routing import Route
 
-from redbeak_runner.server.runtime import ReferenceServer
+from redbeak_reference_server.runtime import ReferenceServer
 
 
 def _bearer(request: Request) -> str | None:

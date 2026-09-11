@@ -5,9 +5,9 @@ from __future__ import annotations
 from datetime import timedelta
 
 from _runner_fixtures import CASE_A, PROJECT_ID, frozen_now, two_turn_case
+from redbeak_reference_server import FrozenClock, ReferenceServer
 from redbeak_runner import CONTRACT_VERSION, RUNNER_VERSION
 from redbeak_runner.ids import new_uuid
-from redbeak_runner.server import FrozenClock, ReferenceServer
 
 
 def _claim(runner_id: str) -> dict[str, object]:
