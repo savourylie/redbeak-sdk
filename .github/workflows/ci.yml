@@ -25,28 +25,30 @@ jobs:
 
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - name: Set up uv and Python
         uses: astral-sh/setup-uv@v5
         with:
-          enable-cache: true
+          # Verify offline checks using only artifacts installed during this job.
+          enable-cache: false
+          cache-local-path: ${{ runner.temp }}/redbeak-ci-cache
           python-version-file: .python-version
 
       - name: Install dependencies
         run: uv sync --all-packages --frozen
 
-      - name: Check formatting
-        run: uv run ruff format --check .
+      - name: Offline checks and distribution acceptance
+        run: make check
 
-      - name: Lint
-        run: uv run ruff check .
-
-      - name: Type-check
-        run: uv run mypy
-
-      # Includes the runner protocol tests -- leases, idempotency,
-      # authorization, resume, pending submission, and the walking skeleton --
-      # which drive the in-memory reference server through httpx.ASGITransport.
-      # They are the checks that demonstrate the guarantees an auditor came for.
-      - name: Test
-        run: uv run pytest
+      # Version tags are created as a separately authorized release action.
+      # Once present, every build must continue to match the public contract tag.
+      - name: Verify the released contract
+        shell: bash
+        run: |
+          if git rev-parse --verify refs/tags/contract-v0.1 >/dev/null 2>&1; then
+            make contract-release-check
+          else
+            echo "contract-v0.1 is not yet tagged; release verification remains pending."
+          fi

@@ -76,9 +76,7 @@ Prerequisites: [uv](https://docs.astral.sh/uv/). The Python version is pinned by
 
 ```bash
 uv sync --all-packages
-uv run pytest             # the whole suite, offline
-uv run ruff check .
-uv run mypy
+make check               # formatting, lint, types, tests, distribution checks; offline
 ```
 
 Nothing here needs a credential, a network connection, or a model provider. If a
@@ -87,8 +85,55 @@ should not have.
 
 While developing against a checkout rather than an installed wheel,
 `REDBEAK_CONTRACTS_ROOT` points `redbeak_contracts` at a `contracts/` directory
-of your choosing. Unset, it walks up from its own location and finds the one
-above.
+of your choosing. Editable installs made by `uv sync` record the live source
+directory at build time, so schema edits take effect without rebuilding the
+package. Regular installs read bundled resources through `importlib.resources`.
+Fixtures remain source-only and are never included in either distribution.
+
+## Build and verify a distribution
+
+After installing the development dependencies, build offline:
+
+```bash
+uv build --offline --package redbeak-contracts --out-dir dist
+```
+
+This produces an sdist and a wheel built from that sdist in an isolated PEP 517
+environment. The build hook copies only `contracts/json-schema/`, and emits
+`redbeak_contracts/_contracts/schema-manifest.json` inside the wheel (under
+`src/` in the sdist). It records `algorithm: sha256` and a `schemas` mapping from
+paths such as `0.1/common.schema.json` to SHA-256 digests of the exact file bytes.
+The schemas themselves are at `redbeak_contracts/_contracts/json-schema/`.
+
+To audit an installed package, obtain a clone of this repository with the
+`contract-v0.1` tag and use the Python interpreter from that installation:
+
+```bash
+python -m redbeak_contracts.verify --repository /path/to/redbeak-sdk
+```
+
+The command first hashes every bundled schema and checks the entire manifest,
+then compares every file byte-for-byte against Git objects at `contract-v0.1`.
+It does not compare against the clone's working files, and it ignores
+`REDBEAK_CONTRACTS_ROOT` so a development override cannot hide a broken install.
+Missing, extra, or changed schemas, a changed manifest, and a missing tag all
+produce a nonzero exit status. This comparison requires Git but no network.
+It proves agreement with the selected Git ref; the manifest is not a signature.
+
+To check a wheel before installing it:
+
+```bash
+uv run --offline --no-sync python -m redbeak_contracts.verify \
+  --repository . --wheel dist/redbeak_contracts-0.1.0-py3-none-any.whl
+```
+
+`make contract-release-check` builds and runs that comparison. The initial
+`contract-v0.1` tag is a separate release step; until it is created, this command
+fails explicitly. During development, add `--ref HEAD` to compare against the
+committed schemas without claiming release-tag verification. `make check`
+exercises that comparison, rejects deliberate drift, installs all three customer
+packages into clean virtualenvs, and validates contract fixtures and SDK/runner
+behavior. It also checks the release tag when that tag is available locally.
 
 ## Licence
 

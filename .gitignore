@@ -15,3 +15,7 @@ build/
 
 # OS / editor
 .DS_Store
+
+.worktrees/
+# Written only by the editable build hook; never distributed.
+_editable_contracts_root.txt
