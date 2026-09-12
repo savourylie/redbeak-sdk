@@ -117,10 +117,45 @@ class EchoAdapter:
         self.sessions.close(context.session_id)
 ```
 
-A working example against real BFCL-derived state lives in
-[`redbeak_bfcl_demo.mock`](../redbeak-bfcl-demo/src/redbeak_bfcl_demo/mock/),
-whose `MockEnvironmentAdapter` implements four of the five methods and leaves
-`send` to the demo targets.
+## When the target is stateless: one method
+
+Four of the five methods are identical for every target that answers text and
+holds nothing — a plain LLM API being the common case. `SingleTurnTextAdapter`
+supplies those four, so that integration is one method long:
+
+```python
+from redbeak_adapter_sdk import AgentOutput, SessionContext, SingleTurnTextAdapter, UserInput
+
+
+class MyApiAdapter(SingleTurnTextAdapter):
+    def __init__(self) -> None:
+        super().__init__(adapter_name="my_api", adapter_version="0.1.0")
+
+    async def send(self, input: UserInput, context: SessionContext) -> AgentOutput:
+        question = self.require_single_turn(input)
+        return AgentOutput(content=await my_model(question))
+```
+
+It is a convenience, not a second protocol: a subclass satisfies `TargetAdapter`
+structurally and a runner cannot tell it from a hand-written one.
+
+What the base supplies follows from the target having no state. `reset()` and
+`close()` do nothing, which makes them trivially deterministic and idempotent.
+`observe()` returns no facts and `capabilities()` declares
+`supports_observations=False`, because a target that changes no business state
+has nothing to observe — the user-visible answer is the whole of the evidence,
+and manufacturing a fact out of it would make the adapter the judge of its own
+output.
+
+**The single-turn limit is the load-bearing part.** `require_single_turn()`
+refuses any input after the first of a case rather than answering it without the
+turns before it, which would record an integration mismatch as a bad answer from
+the model. A target that holds a conversation is not this shape: implement the
+five methods directly and use `SessionStore`.
+
+A complete integration built on it — an OpenAI-compatible API, its data
+boundary, its error attribution, and the customer flow around it — is in
+[`python/examples/llm-api`](../examples/llm-api/).
 
 ## Failures, and who they belong to
 

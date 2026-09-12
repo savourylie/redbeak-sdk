@@ -14,13 +14,17 @@ dependencies = [
 package = false
 
 [tool.uv.workspace]
-members = ["python/*"]
+# `python/examples` is a folder of examples, not a package; its members are
+# one level deeper so each example declares its own dependencies.
+members = ["python/*", "python/examples/*"]
+exclude = ["python/examples"]
 
 [tool.uv.sources]
 redbeak-contracts = { workspace = true }
 redbeak-adapter-sdk = { workspace = true }
 redbeak-reference-server = { workspace = true }
 redbeak-runner = { workspace = true }
+redbeak-example-llm-api = { workspace = true }
 
 [dependency-groups]
 dev = [
@@ -38,6 +42,9 @@ extend-exclude = [".venv"]
 
 [tool.ruff.lint]
 select = ["E", "F", "I", "N", "UP", "B", "SIM", "RUF"]
+# Test content in Traditional Chinese carries full-width punctuation. It is
+# the real text a case would send, not an ASCII lookalike typed by mistake.
+allowed-confusables = ["？", "：", "，"]
 
 [tool.mypy]
 python_version = "3.11"

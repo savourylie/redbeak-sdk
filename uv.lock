@@ -10,6 +10,7 @@ resolution-markers = [
 members = [
     "redbeak-adapter-sdk",
     "redbeak-contracts",
+    "redbeak-example-llm-api",
     "redbeak-reference-server",
     "redbeak-runner",
     "redbeak-sdk-workspace",
@@ -505,6 +506,21 @@ dependencies = [
 
 [package.metadata]
 requires-dist = [{ name = "jsonschema", specifier = ">=4.23" }]
+
+[[package]]
+name = "redbeak-example-llm-api"
+version = "0.1.0"
+source = { editable = "python/examples/llm-api" }
+dependencies = [
+    { name = "httpx" },
+    { name = "redbeak-adapter-sdk" },
+]
+
+[package.metadata]
+requires-dist = [
+    { name = "httpx", specifier = ">=0.27" },
+    { name = "redbeak-adapter-sdk", editable = "python/redbeak-adapter-sdk" },
+]
 
 [[package]]
 name = "redbeak-reference-server"

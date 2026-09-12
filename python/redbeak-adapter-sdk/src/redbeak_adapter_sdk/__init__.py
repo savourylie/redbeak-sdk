@@ -54,6 +54,7 @@ from redbeak_adapter_sdk.models import (
 )
 from redbeak_adapter_sdk.protocol import TargetAdapter
 from redbeak_adapter_sdk.sessions import SessionStore
+from redbeak_adapter_sdk.single_turn import SingleTurnTextAdapter
 
 #: The contract this SDK speaks. Read from the loader so an SDK built against a
 #: newer contract cannot silently keep claiming the old one.
@@ -84,6 +85,7 @@ __all__ = [
     "ObservationSource",
     "SessionContext",
     "SessionStore",
+    "SingleTurnTextAdapter",
     "TargetAdapter",
     "TargetUnavailableError",
     "UnknownSessionError",
