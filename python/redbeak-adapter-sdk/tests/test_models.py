@@ -169,9 +169,18 @@ class TestObservationRequest:
         observed = [Observation(name="a_state", value={})]
         assert request.missing_from(observed) == ("b_state",)
 
-    def test_rejects_an_empty_request(self) -> None:
-        with pytest.raises(ValidationError):
-            ObservationRequest(fact_names=())
+    def test_accepts_a_request_for_nothing(self) -> None:
+        """A stateless single-turn case has no end state to observe.
+
+        Contract 0.1 required at least one fact name until the 2026-09-12
+        amendment. Naming a fact a plain question-answering target can never
+        produce would have made every such case look as though it under-reported
+        its evidence.
+        """
+
+        request = ObservationRequest(fact_names=())
+        assert request.to_dict()["fact_names"] == []
+        assert request.missing_from([]) == ()
 
 
 class TestObservation:
