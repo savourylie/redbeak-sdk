@@ -36,9 +36,30 @@ def run(*args: str, cwd: Path, override: Path | None = None) -> str:
 
 
 @pytest.fixture(scope="module")
-def artifacts(tmp_path_factory: pytest.TempPathFactory) -> dict[str, Path]:
+def artifacts(
+    tmp_path_factory: pytest.TempPathFactory, pytestconfig: pytest.Config
+) -> dict[str, Path]:
     root = tmp_path_factory.mktemp("distributions")
     assert not root.is_relative_to(REPO)
+    runtime_lock = root / "pylock.runtime.toml"
+    # A frozen sync caches locked artifacts, but need not cache registry indexes.
+    # Export URLs/hashes from the invoking workspace's lock (SDK or monorepo),
+    # so the clean install uses exactly the runtime artifacts seeded by setup.
+    run(
+        "uv",
+        "export",
+        "--offline",
+        "--frozen",
+        "--package",
+        "redbeak-runner",
+        "--no-dev",
+        "--no-emit-workspace",
+        "--format",
+        "pylock.toml",
+        "--output-file",
+        str(runtime_lock),
+        cwd=pytestconfig.rootpath,
+    )
     direct = root / "direct"
     for name in ("redbeak-contracts", "redbeak-adapter-sdk", "redbeak-runner"):
         run(
@@ -63,7 +84,13 @@ def artifacts(tmp_path_factory: pytest.TempPathFactory) -> dict[str, Path]:
     # uv uses an isolated PEP 517 build environment, with only the sdist's files.
     rebuilt = root / "rebuilt"
     run("uv", "build", "--offline", "--wheel", "--out-dir", str(rebuilt), str(source), cwd=root)
-    return {"root": root, "direct": direct, "rebuilt": rebuilt, "source": source}
+    return {
+        "root": root,
+        "direct": direct,
+        "rebuilt": rebuilt,
+        "source": source,
+        "runtime_lock": runtime_lock,
+    }
 
 
 PROBE = """
@@ -130,17 +157,16 @@ def test_clean_install_validates_all_three_packages(
     venv = tmp_path / "venv"
     run(sys.executable, "-m", "venv", str(venv), cwd=tmp_path)
     python = str(venv / "bin/python")
-    # Runtime dependencies are cached by uv sync; pip installs the actual artifacts.
+    # Install the locked runtime dependencies without resolving version ranges.
+    # pip then installs the customer artifacts themselves below.
     run(
         "uv",
         "pip",
-        "install",
+        "sync",
         "--offline",
         "--python",
         python,
-        "jsonschema>=4.23",
-        "httpx>=0.27",
-        "typer>=0.12",
+        str(artifacts["runtime_lock"]),
         cwd=tmp_path,
     )
     wheels = list(artifacts["direct"].glob("*.whl"))

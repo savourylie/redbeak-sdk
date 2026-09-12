@@ -57,3 +57,22 @@ Create the agreed contract tag as a release action and rerun
 the real tag whenever present, and reports its absence otherwise. No index
 publication, tag publication, remote CI execution, merge, or tracker completion
 is established by this local verification.
+
+## Fresh-cache CI correction
+
+The first GitHub CI run failed both clean-install tests: `uv sync --frozen`
+downloaded the locked wheels, but did not populate the registry index metadata
+needed by a subsequent offline install of version ranges. The earlier local
+checks used a warm cache and missed this dependency on cached index metadata.
+
+The failure was reproduced in a disposable clone with an empty uv cache, after
+running only the documented dependency setup. The tests now export the invoking
+workspace's locked runner dependencies to `pylock.toml`, then install those
+exact artifact URLs and hashes offline. This also respects the consuming
+monorepo's own lockfile. The three customer wheels are still installed with pip
+into clean virtualenvs, and no test gains network access.
+
+After the correction, the same fresh-cache clone passed all 377 SDK tests and
+the complete offline `make check`. The monorepo's 684 Python tests also passed
+again. CI now uses a fresh job-local cache and does not restore a cache from an
+earlier run, so cached registry indexes cannot mask this failure again.
