@@ -16,6 +16,8 @@ import json
 import os
 from collections.abc import Iterator
 from functools import cache
+from importlib.resources import files
+from importlib.resources.abc import Traversable
 from pathlib import Path
 from typing import Any, Literal, cast
 
@@ -59,12 +61,12 @@ class ContractError(RuntimeError):
     """Raised when the contract itself cannot be loaded."""
 
 
-def contracts_root() -> Path:
-    """Locate the ``contracts/`` directory.
+def contracts_root() -> Traversable:
+    """Locate bundled contracts, or the explicitly selected development source.
 
     ``REDBEAK_CONTRACTS_ROOT`` wins when set, which is what lets an installed
-    wheel point at a checkout. Otherwise walk up from this file until a
-    directory containing ``contracts/json-schema`` appears.
+    wheel point at a checkout. Editable builds record the live source location;
+    regular wheels read their own resources without relying on a checkout.
     """
     override = os.environ.get("REDBEAK_CONTRACTS_ROOT")
     if override:
@@ -73,19 +75,28 @@ def contracts_root() -> Path:
             raise ContractError(f"REDBEAK_CONTRACTS_ROOT={override} has no json-schema directory")
         return root
 
-    for candidate in Path(__file__).resolve().parents:
-        root = candidate / "contracts"
-        if (root / "json-schema").is_dir():
-            return root
-    raise ContractError("could not locate the contracts directory; set REDBEAK_CONTRACTS_ROOT")
+    package = files("redbeak_contracts")
+    editable = package.joinpath("_editable_contracts_root.txt")
+    root_resource: Traversable = (
+        Path(editable.read_text(encoding="utf-8"))
+        if editable.is_file()
+        else package.joinpath("_contracts")
+    )
+    if not root_resource.joinpath("json-schema").is_dir():
+        raise ContractError("contract schemas are missing; rebuild or reinstall redbeak-contracts")
+    return root_resource
 
 
-def schema_dir(version: str = CONTRACT_VERSION) -> Path:
-    return contracts_root() / "json-schema" / version
+def schema_dir(version: str = CONTRACT_VERSION) -> Traversable:
+    return contracts_root().joinpath("json-schema", version)
 
 
 def fixture_dir(kind: FixtureKind) -> Path:
-    return contracts_root() / "fixtures" / kind
+    """Source-only test fixtures; intentionally absent from distributions."""
+    root = contracts_root()
+    if isinstance(root, Path) and (root / "fixtures" / kind).is_dir():
+        return root / "fixtures" / kind
+    raise ContractError("fixtures are source-only; set REDBEAK_CONTRACTS_ROOT to a checkout")
 
 
 @cache
@@ -93,17 +104,19 @@ def schema_names(version: str = CONTRACT_VERSION) -> tuple[str, ...]:
     """Every schema in the contract, including the shared definitions."""
     return tuple(
         sorted(
-            p.name.removesuffix(".schema.json") for p in schema_dir(version).glob("*.schema.json")
+            p.name.removesuffix(".schema.json")
+            for p in schema_dir(version).iterdir()
+            if p.is_file() and p.name.endswith(".schema.json")
         )
     )
 
 
 @cache
 def load_schema(name: str, version: str = CONTRACT_VERSION) -> dict[str, Any]:
-    path = schema_dir(version) / f"{name}.schema.json"
+    path = schema_dir(version).joinpath(f"{name}.schema.json")
     if not path.is_file():
         raise ContractError(f"no such schema: {name} (contract {version})")
-    return cast(dict[str, Any], json.loads(path.read_text()))
+    return cast(dict[str, Any], json.loads(path.read_text(encoding="utf-8")))
 
 
 def boundary_of(name: str, version: str = CONTRACT_VERSION) -> Boundary:

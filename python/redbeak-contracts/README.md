@@ -34,10 +34,22 @@ rc.validate("observation", document)
 
 ## Locating the schemas
 
-`REDBEAK_CONTRACTS_ROOT` wins when set, which is what lets an installed package
-point at a checkout. Otherwise the package walks up from its own location until
-a directory containing `contracts/json-schema` appears — which is how it
-resolves both inside this repository and inside a monorepo that consumes it as a
-submodule.
+`REDBEAK_CONTRACTS_ROOT` wins when set and points at a directory containing
+`json-schema/`. Otherwise a regular installation uses its own resources at
+`redbeak_contracts/_contracts/json-schema/`, loaded through `importlib.resources`.
+`contracts_root()` and `schema_dir()` return resource `Traversable` objects,
+which support `joinpath`, `iterdir`, `read_text`, and `read_bytes`; they need not
+be filesystem paths (for example when importing from a ZIP archive).
+
+Editable builds record the source `contracts/` path in an excluded development
+resource. This keeps the repository and consuming monorepo reading the live
+canonical files. Moving a checkout requires running `uv sync --reinstall-package
+redbeak-contracts` again. Fixtures are available only in source development or
+through the explicit override; they are not distributed.
+
+Both sdist and wheel contain a SHA-256 manifest at
+`redbeak_contracts/_contracts/schema-manifest.json` (under `src/` in the sdist).
+The [public verification procedure](../../README.md#build-and-verify-a-distribution)
+compares it and every bundled schema against Git objects at `contract-v0.1`.
 
 Runtime dependency: `jsonschema`. Nothing else.
