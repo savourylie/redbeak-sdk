@@ -21,6 +21,7 @@ The repository is deliberately small enough to read in an afternoon.
 | What your adapter is handed, and what it is refused | [`python/redbeak-adapter-sdk`](python/redbeak-adapter-sdk/README.md) |
 | That the schemas are enforced rather than described | [`python/redbeak-contracts`](python/redbeak-contracts/README.md) |
 | How the protocol guarantees are tested | [`python/redbeak-reference-server`](python/redbeak-reference-server/README.md) — a test tool, never published |
+| What an integration actually looks like | [`python/examples/llm-api`](python/examples/llm-api/README.md) — a complete single-turn adapter, one method long |
 
 ```text
 contracts/            The versioned wire contract. Code-free and language-neutral.
@@ -31,7 +32,8 @@ python/
 ├── redbeak-contracts/         Loader, validator, and boundary guards
 ├── redbeak-adapter-sdk/       The TargetAdapter contract your integration implements
 ├── redbeak-runner/            The outbound runner: leases, idempotent evidence, resume
-└── redbeak-reference-server/  Test-only orchestrator stand-in. Never published.
+├── redbeak-reference-server/  Test-only orchestrator stand-in. Never published.
+└── examples/llm-api/          A single-turn adapter for a plain LLM API, ready to copy
 ```
 
 `contracts/` sits at the root, with no code beside it, because a future
