@@ -143,18 +143,23 @@ Create the Run and execute it here:
 
 ```bash
 redbeak runs create \
-  --suite <suite-slug> --suite-version <version> \
+  --suite tmmlu_plus_50 --suite-version 0.1.0 \
   --target <target-name> --target-version <version> \
   --adapter redbeak_example_llm_api \
   --execute
 ```
 
-> **Suite identifiers are not final yet.** The 50-question Traditional Chinese
-> sample (drawn from TMMLU+), its version, its prompt format and its scoring
-> rules are being prepared separately, on the Redbeak side. Use the slug and
-> version that `redbeak runs versions` reports for your Project; the values above
-> are placeholders. `--suite-version-id <uuid>` pins an exact version instead of
-> a slug and version pair.
+> **About this suite.** `tmmlu_plus_50` version `0.1.0` is a 50-question
+> Traditional Chinese sample drawn from TMMLU+, held and scored by Redbeak. Each
+> case is one question with four options, and the prompt asks the model for a
+> single letter. `--suite-version-id a4d606a1-6e6f-5bf8-b2a7-3ee00ce30076` pins
+> the exact version instead of the slug and version pair; `redbeak runs versions`
+> reports what your own Project actually has, which is the authority if it
+> differs.
+>
+> Fifty questions drawn without subject balancing cannot support an accuracy,
+> ranking or capability claim about any model. This suite verifies an
+> integration.
 
 Your Project CLI token authorises the Run's creation. `--execute` then obtains a
 short-lived credential scoped to that Run alone, so a local runner started this
@@ -189,10 +194,18 @@ aggregate counts. Three outcomes stay distinct there and should not be conflated
 
 * **a wrong answer** — the model answered, and answered incorrectly;
 * **an unparseable answer** — the model answered in a shape the parser could not
-  read, which is a fact about the model, not about your integration;
+  read, which is a fact about the model, not about your integration. The usual
+  cause is a model that reasons aloud: a reply that weighs several options before
+  concluding names more than one letter, so it is recorded as `invalid` rather
+  than guessed at. It stays in the denominator and is never counted as a wrong
+  answer;
 * **an execution error** — your integration or the provider failed. Its `stage`
   names who has to fix it: `target_unavailable` is the provider, while `adapter`,
   `protocol`, `transport` and `timeout` are this client.
+
+If most of a Run comes back `invalid`, the model is ignoring the single-letter
+instruction rather than failing the questions. Read a raw reply before drawing
+anything from the pass rate.
 
 A completed integration does not require the model to score well. It requires
 all 50 cases to be accounted for, the replies to be inspectable, and errors of
