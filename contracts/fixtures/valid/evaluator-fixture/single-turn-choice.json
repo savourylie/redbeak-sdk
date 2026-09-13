@@ -1,0 +1,29 @@
+{
+  "data_classification": "public_benchmark",
+  "display_label": "Public benchmark / illustrative sample",
+  "external_id": "illustrative_subject:val:0",
+  "outcome_assertions": {
+    "fact_names": []
+  },
+  "provenance": {
+    "raw_possible_answers_sha256": "sha256:d2d2d2d2d2d2d2d2d2d2d2d2d2d2d2d2d2d2d2d2d2d2d2d2d2d2d2d2d2d2d2d2",
+    "raw_questions_sha256": "sha256:c1c1c1c1c1c1c1c1c1c1c1c1c1c1c1c1c1c1c1c1c1c1c1c1c1c1c1c1c1c1c1c1",
+    "source_record_id": "illustrative_subject:val:0",
+    "source_revision": "45e7c9b06d417c02a0998b2a6047383b04d608a9"
+  },
+  "response_assertions": [
+    {
+      "expected_calls": [
+        {
+          "arguments": {
+            "option": "B"
+          },
+          "function": "select_option"
+        }
+      ],
+      "sequence": 0
+    }
+  ],
+  "schema_version": "0.1",
+  "user_turn_count": 1
+}

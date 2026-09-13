@@ -128,3 +128,43 @@ depend on which service happened to process it.
 Adding a _new_ schema file is additive and needs no version bump. Changing an
 existing wire payload — a new required field, a widened enum, a renamed
 property — is breaking for a strict validator on the other end and does.
+
+## Amendments to 0.1
+
+`0.1` is otherwise frozen. One amendment has been made, and it is recorded here
+rather than left for a reader to find by diffing, because the rule immediately
+above says a widened enum normally earns a version bump.
+
+### 2026-09-12 — single-turn benchmark content (TAI-218)
+
+Four constraints were **relaxed**. Every document that validated before this
+amendment still validates after it: no field was added, removed, renamed or made
+required, and no value that used to be accepted is now rejected. The direction is
+what made an in-place amendment defensible; a widening that rejected old data
+would not have been.
+
+| Change | Was | Now |
+| --- | --- | --- |
+| `common#/$defs/data_classification` | `["synthetic"]` | `["synthetic", "public_benchmark"]` |
+| `common#/$defs/observation_request` `fact_names` | `minItems: 1` | `minItems: 0` |
+| `normalized-scenario` `involved_classes` | `minItems: 1` | `minItems: 0` |
+| `evaluator-fixture` `outcome_assertions.fact_names` | `minItems: 1` | `minItems: 0` |
+
+All four have one cause. `0.1` was shaped around BFCL's multi-turn, stateful,
+tool-using scenarios, where every case has a mock registry, an end state worth
+observing, and synthetic content. A single-turn multiple-choice question
+answered by a plain model API has none of those: no tool classes, no end state,
+and openly licensed third-party content rather than generated content. The three
+`minItems` relaxations let those emptinesses be stated as empty rather than
+padded with a placeholder fact or class that does not exist — which would have
+made every such case look as though it under-reported its evidence.
+
+`public_benchmark` is **not** a route to real customer data. That remains
+prohibited under either value until TaiwanEval's Pilot Data Handling Policy
+defines its retention, deletion, access, incident and subcontractor boundaries,
+and neither value may be used to label it.
+
+Authorized by the repository owner on 2026-09-12, in preference to cutting a
+`0.2` whose migration would have touched every schema, both language loaders and
+all 132 fixtures. The amendment was made before the contract had any external
+consumer.

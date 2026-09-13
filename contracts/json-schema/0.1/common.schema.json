@@ -60,8 +60,8 @@
       "pattern": "^[a-z][a-z0-9_]*$"
     },
     "data_classification": {
-      "description": "Demo v0 is synthetic-only. Real customer data is prohibited until TaiwanEval's Pilot Data Handling Policy defines retention, deletion, access, incident, and subcontractor boundaries.",
-      "enum": ["synthetic"]
+      "description": "What the evidence was produced from. `synthetic` is generated material; `public_benchmark` is openly licensed third-party benchmark content, pinned by revision with its attribution and source terms recorded on the dataset version. Real customer data remains prohibited under both values until TaiwanEval's Pilot Data Handling Policy defines retention, deletion, access, incident, and subcontractor boundaries, so neither value may be used to label it.",
+      "enum": ["synthetic", "public_benchmark"]
     },
     "evaluation_private_property_names": {
       "description": "Property names that must never cross the trust boundary into a customer environment. Exact names only: prefix matching would reject legitimate domain data such as a travel mock's `expected_arrival`. `path` is deliberately absent because it is a legitimate key in a file-system mock; BFCL's evaluator-private `path` must be excluded by explicit importer field mapping instead, which is what the field map already requires.",
@@ -110,8 +110,9 @@
       "required": ["fact_names"],
       "properties": {
         "fact_names": {
+          "description": "May be empty for a stateless single-turn case, where the answer text is the whole of the evidence and there is no end state to observe. Asking for a fact that cannot exist would make every such case look as though it under-reported evidence.",
           "type": "array",
-          "minItems": 1,
+          "minItems": 0,
           "maxItems": 64,
           "uniqueItems": true,
           "items": { "$ref": "#/$defs/fact_name" }

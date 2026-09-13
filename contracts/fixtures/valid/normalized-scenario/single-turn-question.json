@@ -1,0 +1,28 @@
+{
+  "data_classification": "public_benchmark",
+  "display_label": "Public benchmark / illustrative sample",
+  "domain": "illustrative_subject",
+  "external_id": "illustrative_subject:val:0",
+  "involved_classes": [],
+  "provenance": {
+    "attribution": "Illustrative public benchmark sample. Not a real benchmark item.",
+    "license": "MIT",
+    "raw_possible_answers_sha256": "sha256:d2d2d2d2d2d2d2d2d2d2d2d2d2d2d2d2d2d2d2d2d2d2d2d2d2d2d2d2d2d2d2d2",
+    "raw_questions_sha256": "sha256:c1c1c1c1c1c1c1c1c1c1c1c1c1c1c1c1c1c1c1c1c1c1c1c1c1c1c1c1c1c1c1c1",
+    "retrieved_at": "2026-09-12T14:52:00Z",
+    "source_record_id": "illustrative_subject:val:0",
+    "source_revision": "45e7c9b06d417c02a0998b2a6047383b04d608a9"
+  },
+  "schema_version": "0.1",
+  "setup": {
+    "payload": {},
+    "type": "inline"
+  },
+  "turns": [
+    {
+      "content": "請閱讀下列題目，並從四個選項中選出唯一正確的答案。\n\n題目：範例題幹。\n\nA. 範例選項一\nB. 範例選項二\nC. 範例選項三\nD. 範例選項四\n\n只輸出一個選項字母。",
+      "sequence": 0,
+      "type": "user_message"
+    }
+  ]
+}
