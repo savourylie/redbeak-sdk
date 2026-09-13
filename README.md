@@ -129,9 +129,10 @@ uv run --offline --no-sync python -m redbeak_contracts.verify \
   --repository . --wheel dist/redbeak_contracts-0.1.0-py3-none-any.whl
 ```
 
-`make contract-release-check` builds and runs that comparison. The initial
-`contract-v0.1` tag is a separate release step; until it is created, this command
-fails explicitly. During development, add `--ref HEAD` to compare against the
+`make contract-release-check` builds and runs that comparison. `contract-v0.1`
+was tagged on 2026-09-12 and re-cut on 2026-09-13 to carry the amendment recorded
+in [`contracts/README.md`](contracts/README.md); in a clone that lacks the tag
+this command fails explicitly rather than falling back to another ref. During development, add `--ref HEAD` to compare against the
 committed schemas without claiming release-tag verification. `make check`
 exercises that comparison, rejects deliberate drift, installs all three customer
 packages into clean virtualenvs, and validates contract fixtures and SDK/runner
