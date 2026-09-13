@@ -168,3 +168,18 @@ Authorized by the repository owner on 2026-09-12, in preference to cutting a
 `0.2` whose migration would have touched every schema, both language loaders and
 all 132 fixtures. The amendment was made before the contract had any external
 consumer.
+
+### The `contract-v0.1` tag was moved
+
+The tag was first cut on 2026-09-12 at `a84b8d7`, before this amendment, and
+re-cut on 2026-09-13 at the commit that merged it. It was publicly fetchable for
+roughly eighteen hours in between. Anyone who fetched it in that window holds a
+ref that no longer matches this repository, and `python -m
+redbeak_contracts.verify` will fail against that stale copy, naming the three
+schemas in the table above. Re-fetch with `git fetch --tags --force`.
+
+Moving a published tag is not the normal path, and this is not a precedent. It
+was chosen over cutting a `0.2` because nothing outside this repository was known
+to depend on `0.1`. Once anything does, an amendment gets a version bump instead:
+the tag is the thing an auditor verifies against, so moving it a second time
+would make that verification worth nothing.

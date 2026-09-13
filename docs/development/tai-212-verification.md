@@ -52,6 +52,13 @@ fails on that missing reference; comparison against `HEAD` passes for all 21
 schemas. A synthetic test tag is evidence for the checker, not evidence of an
 actual release tag.
 
+**Resolved 2026-09-13.** The tag now exists. It was first cut at `a84b8d7`, then
+re-cut at `06de7e6` to carry the single-turn benchmark amendment recorded in
+`contracts/README.md`. `make contract-release-check` runs against the real tag in
+CI on `main` and passes, so tag-based provenance is established for the contract
+as it now stands. The findings above are unchanged and remain as recorded at the
+time.
+
 Create the agreed contract tag as a release action and rerun
 `make contract-release-check` before claiming tag-based provenance. CI checks
 the real tag whenever present, and reports its absence otherwise. No index
